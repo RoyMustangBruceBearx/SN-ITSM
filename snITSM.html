@@ -4,36 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神农集团数字化平台</title>
-    <!-- 引入Font Awesome图标库 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* ==================== 基础样式重置 ==================== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* ==================== 主体样式 ==================== */
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            /* 渐变背景 + 农田背景图片 */
             background: linear-gradient(135deg, rgba(74, 144, 226, 0.85) 0%, rgba(46, 58, 89, 0.9) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
             min-height: 100vh;
             color: #333;
         }
 
-        /* ==================== 布局容器 ==================== */
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        /* ==================== 头部区域样式 ==================== */
         .header {
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(15px); /* 毛玻璃效果 */
+            backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
@@ -44,7 +38,6 @@
 
             .header h1 {
                 font-size: 2.8rem;
-                /* 彩色渐变文字效果 */
                 background: linear-gradient(45deg, #DC143C, #FF6B6B, #228B22);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
@@ -60,7 +53,6 @@
                 font-weight: 500;
             }
 
-        /* 统计信息条 */
         .stats-bar {
             display: flex;
             justify-content: center;
@@ -81,7 +73,6 @@
                 color: #DC143C;
             }
 
-        /* ==================== 控制面板样式 ==================== */
         .control-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
@@ -97,7 +88,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* 搜索框样式 */
         .search-box {
             flex: 1;
             max-width: 400px;
@@ -141,7 +131,6 @@
                     box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
                 }
 
-        /* 视图控制按钮 */
         .view-controls {
             display: flex;
             gap: 10px;
@@ -171,7 +160,6 @@
                 color: #DC143C;
             }
 
-        /* ==================== 系统卡片网格样式 ==================== */
         .systems-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -180,7 +168,6 @@
             transition: all 0.3s ease;
         }
 
-        /* 系统卡片样式 */
         .system-card {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(15px);
@@ -197,14 +184,12 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-            /* 隐藏状态的卡片（用于搜索过滤） */
             .system-card.hidden {
                 opacity: 0;
                 transform: scale(0.8);
                 pointer-events: none;
             }
 
-            /* 卡片顶部彩色条（悬停时显示） */
             .system-card::before {
                 content: '';
                 position: absolute;
@@ -226,7 +211,6 @@
                     transform: scaleX(1);
                 }
 
-        /* 系统图标样式 */
         .system-icon {
             font-size: 3rem;
             margin-bottom: 15px;
@@ -250,7 +234,6 @@
             margin-bottom: 15px;
         }
 
-        /* 系统状态标签 */
         .system-status {
             display: inline-flex;
             align-items: center;
@@ -264,7 +247,6 @@
             font-weight: 500;
         }
 
-        /* 收藏按钮样式 */
         .favorite-btn {
             position: absolute;
             top: 15px;
@@ -287,7 +269,6 @@
                 color: #FF6B6B;
             }
 
-        /* ==================== 页脚样式 ==================== */
         .footer {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(15px);
@@ -318,7 +299,6 @@
                 color: #4A90E2;
             }
 
-        /* ==================== 列表视图样式 ==================== */
         .list-view .systems-grid {
             display: block;
         }
@@ -350,7 +330,6 @@
             margin-bottom: 0;
         }
 
-        /* ==================== 无搜索结果样式 ==================== */
         .no-results {
             text-align: center;
             padding: 60px 20px;
@@ -370,7 +349,7 @@
                 color: #2E3A59;
             }
 
-        /* ==================== AI助手样式 ==================== */
+        /* AI助手样式 */
         .ai-assistant {
             position: fixed;
             bottom: 24px;
@@ -378,7 +357,6 @@
             z-index: 1000;
         }
 
-        /* AI浮动按钮 */
         .ai-button {
             width: 64px;
             height: 64px;
@@ -404,13 +382,11 @@
                 transform: scale(0.95);
             }
 
-        /* 猪头表情符号 */
         .pig-emoji {
             font-size: 28px;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
-        /* AI提示气泡 */
         .ai-bubble {
             position: absolute;
             bottom: 70px;
@@ -428,7 +404,6 @@
             border: 1px solid rgba(255, 20, 147, 0.2);
         }
 
-            /* 气泡箭头 */
             .ai-bubble::after {
                 content: '';
                 position: absolute;
@@ -446,17 +421,16 @@
             transform: translateY(0);
         }
 
-        /* ==================== AI对话侧边栏样式 ==================== */
         .ai-sidebar {
             position: fixed;
             top: 0;
             right: 0;
-            width: 380px;
+            width: 400px;
             height: 100vh;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             border-left: 1px solid rgba(0, 0, 0, 0.1);
-            transform: translateX(100%); /* 初始隐藏 */
+            transform: translateX(100%);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1001;
             display: flex;
@@ -465,10 +439,9 @@
         }
 
             .ai-sidebar.show {
-                transform: translateX(0); /* 显示状态 */
+                transform: translateX(0);
             }
 
-        /* AI对话头部 */
         .ai-header {
             padding: 20px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -502,7 +475,6 @@
                 color: #1f2937;
             }
 
-        /* AI在线状态指示器 */
         .ai-status {
             font-size: 12px;
             color: #10b981;
@@ -511,6 +483,14 @@
             align-items: center;
             gap: 4px;
         }
+
+            .ai-status.offline {
+                color: #ef4444;
+            }
+
+            .ai-status.connecting {
+                color: #f59e0b;
+            }
 
             .ai-status::before {
                 content: '';
@@ -521,7 +501,42 @@
                 animation: pulse 2s infinite;
             }
 
-        /* 关闭按钮 */
+            .ai-status.offline::before {
+                background: #ef4444;
+                animation: none;
+            }
+
+            .ai-status.connecting::before {
+                background: #f59e0b;
+                animation: pulse 1s infinite;
+            }
+
+        .ai-settings {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+            .settings-btn:hover {
+                background: rgba(0, 0, 0, 0.1);
+                color: #374151;
+            }
+
         .ai-close {
             width: 32px;
             height: 32px;
@@ -541,7 +556,6 @@
                 color: #374151;
             }
 
-        /* 聊天区域 */
         .ai-chat-area {
             flex: 1;
             overflow-y: auto;
@@ -551,7 +565,6 @@
             gap: 16px;
         }
 
-        /* ==================== 聊天消息样式 ==================== */
         .chat-message {
             display: flex;
             gap: 8px;
@@ -560,10 +573,9 @@
         }
 
             .chat-message.user {
-                flex-direction: row-reverse; /* 用户消息右对齐 */
+                flex-direction: row-reverse;
             }
 
-        /* 消息头像 */
         .message-avatar {
             width: 32px;
             height: 32px;
@@ -586,7 +598,6 @@
                 color: white;
             }
 
-        /* 消息内容 */
         .message-content {
             max-width: 280px;
             padding: 12px 16px;
@@ -599,16 +610,15 @@
             .message-content.ai {
                 background: rgba(249, 250, 251, 0.8);
                 color: #374151;
-                border-top-left-radius: 6px; /* AI消息左上角圆角减小 */
+                border-top-left-radius: 6px;
             }
 
             .message-content.user {
                 background: linear-gradient(135deg, #4A90E2, #2563eb);
                 color: white;
-                border-top-right-radius: 6px; /* 用户消息右上角圆角减小 */
+                border-top-right-radius: 6px;
             }
 
-        /* 消息时间 */
         .message-time {
             font-size: 11px;
             color: #9ca3af;
@@ -616,14 +626,12 @@
             text-align: center;
         }
 
-        /* ==================== AI输入区域样式 ==================== */
         .ai-input-area {
             padding: 16px 20px 20px;
             border-top: 1px solid rgba(0, 0, 0, 0.08);
             background: rgba(255, 255, 255, 0.95);
         }
 
-        /* 快捷回复按钮 */
         .quick-replies {
             display: flex;
             flex-wrap: wrap;
@@ -647,14 +655,12 @@
                 transform: translateY(-1px);
             }
 
-        /* 输入容器 */
         .input-container {
             display: flex;
             gap: 8px;
             align-items: flex-end;
         }
 
-        /* AI输入框 */
         .ai-input {
             flex: 1;
             min-height: 40px;
@@ -675,7 +681,6 @@
                 box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
             }
 
-        /* 发送按钮 */
         .send-button {
             width: 40px;
             height: 40px;
@@ -691,7 +696,7 @@
             font-size: 16px;
         }
 
-            .send-button:hover {
+            .send-button:hover:not(:disabled) {
                 transform: scale(1.05);
                 box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
             }
@@ -702,9 +707,87 @@
                 transform: none;
             }
 
-        /* ==================== 动画效果 ==================== */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin: 10px 0;
+        }
 
-        /* AI按钮浮动动画 */
+        .api-settings {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            width: 280px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1002;
+            transform: scale(0.95) translateY(-10px);
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+            .api-settings.show {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .api-settings h4 {
+                margin: 0 0 12px 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+            .api-settings label {
+                display: block;
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 4px;
+            }
+
+            .api-settings input, .api-settings select {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                border-radius: 6px;
+                font-size: 12px;
+                margin-bottom: 12px;
+                background: rgba(255, 255, 255, 0.9);
+            }
+
+                .api-settings input:focus, .api-settings select:focus {
+                    outline: none;
+                    border-color: #FF1493;
+                    box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.1);
+                }
+
+            .api-settings button {
+                width: 100%;
+                padding: 8px 16px;
+                background: linear-gradient(135deg, #FF69B4, #FF1493);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+                .api-settings button:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+                }
+
         @keyframes aiFloat {
             0%, 100% {
                 transform: translateY(0px);
@@ -715,7 +798,6 @@
             }
         }
 
-        /* 状态指示器脉冲动画 */
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
@@ -726,7 +808,6 @@
             }
         }
 
-        /* 消息滑入动画 */
         @keyframes messageSlide {
             from {
                 opacity: 0;
@@ -739,7 +820,18 @@
             }
         }
 
-        /* ==================== 响应式设计 ==================== */
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -771,7 +863,6 @@
                 gap: 20px;
             }
 
-            /* 移动端AI侧边栏全屏显示 */
             .ai-sidebar {
                 width: 100vw;
             }
@@ -789,16 +880,21 @@
             .pig-emoji {
                 font-size: 24px;
             }
+
+            .api-settings {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- ==================== 头部区域 ==================== -->
+        <!-- 头部区域 -->
         <header class="header">
             <h1><i class="fas fa-piggy-bank"></i> 神农集团数字化平台</h1>
             <p class="subtitle">现代农牧业 · 智慧管理 · 数字未来</p>
-            <!-- 实时统计信息栏 -->
             <div class="stats-bar">
                 <div class="stat-item">
                     <i class="fas fa-user-friends"></i>
@@ -819,36 +915,29 @@
             </div>
         </header>
 
-        <!-- ==================== 控制面板 ==================== -->
+        <!-- 控制面板 -->
         <div class="control-panel">
-            <!-- 搜索功能区 -->
             <div class="search-box">
                 <input type="text"
                        placeholder="搜索系统、功能..."
-                       id="searchInput"
-                       autocomplete="off">
-                <button onclick="filterSystems()" aria-label="搜索">
-                    <i class="fas fa-search-plus"></i>
-                </button>
+                       id="searchInput">
+                <button onclick="filterSystems()"><i class="fas fa-search-plus"></i></button>
             </div>
-            <!-- 视图切换控制 -->
             <div class="view-controls">
-                <button class="view-btn active" id="gridBtn" onclick="setViewMode('grid')" aria-label="网格视图">
+                <button class="view-btn active" id="gridBtn" onclick="setViewMode('grid')">
                     <i class="fas fa-th-large"></i> 网格
                 </button>
-                <button class="view-btn" id="listBtn" onclick="setViewMode('list')" aria-label="列表视图">
+                <button class="view-btn" id="listBtn" onclick="setViewMode('list')">
                     <i class="fas fa-list-ul"></i> 列表
                 </button>
             </div>
         </div>
 
-        <!-- ==================== 系统列表容器 ==================== -->
+        <!-- 系统列表 -->
         <div class="systems-container" id="systemsContainer">
-            <!-- 系统卡片网格（通过JavaScript动态生成） -->
             <div class="systems-grid" id="systemsGrid">
                 <!-- 系统卡片将通过JavaScript动态生成 -->
             </div>
-            <!-- 无搜索结果提示 -->
             <div class="no-results" id="noResults" style="display: none;">
                 <i class="fas fa-search-minus"></i>
                 <h3>未找到相关系统</h3>
@@ -856,7 +945,7 @@
             </div>
         </div>
 
-        <!-- ==================== 页脚信息 ==================== -->
+        <!-- 页脚 -->
         <footer class="footer">
             <div class="footer-info">
                 <div class="footer-item">
@@ -880,75 +969,92 @@
         </footer>
     </div>
 
-    <!-- ==================== AI助手浮动按钮 ==================== -->
+    <!-- AI助手浮动按钮 -->
     <div class="ai-assistant">
-        <button class="ai-button" onclick="toggleAISidebar()" aria-label="打开AI助手">
+        <button class="ai-button" onclick="toggleAISidebar()">
             <div class="pig-emoji">🐷</div>
             <div class="ai-bubble">我是神农晓问 🐷</div>
         </button>
     </div>
 
-    <!-- ==================== AI对话侧边栏 ==================== -->
+    <!-- AI对话侧边栏 -->
     <div class="ai-sidebar" id="aiSidebar">
-        <!-- AI助手头部信息 -->
         <div class="ai-header">
             <div class="ai-avatar">🐷</div>
             <div class="ai-info">
                 <h3>神农晓问 🐷</h3>
-                <div class="ai-status">在线中</div>
+                <div class="ai-status" id="aiStatus">离线</div>
             </div>
-            <button class="ai-close" onclick="closeAISidebar()" aria-label="关闭AI助手">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="ai-settings">
+                <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="ai-close" onclick="closeAISidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
 
-        <!-- 聊天消息区域 -->
+        <!-- API设置面板 -->
+        <div class="api-settings" id="apiSettings">
+            <h4>API 配置</h4>
+            <label for="apiKey">API Key</label>
+            <input type="password" id="apiKey" placeholder="请输入您的API Key">
+
+            <label for="modelSelect">模型选择</label>
+            <select id="modelSelect">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="llama2">Llama 2</option>
+                <option value="claude-3">Claude 3</option>
+            </select>
+
+            <label for="maxTokens">最大令牌数</label>
+            <input type="number" id="maxTokens" value="2000" min="100" max="4000">
+
+            <label for="temperature">创造性 (0-1)</label>
+            <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+
+            <button onclick="saveAPISettings()">保存设置</button>
+        </div>
+
         <div class="ai-chat-area" id="aiChatArea">
-            <!-- 初始欢迎消息 -->
             <div class="chat-message">
                 <div class="message-avatar ai">🐷</div>
                 <div>
                     <div class="message-content ai">
                         您好！我是神农晓问，您的专属智能农牧助手！🐷✨<br><br>
-                        我可以帮您解答关于农牧业生产、系统操作、数据分析等各种问题。有什么可以帮助您的吗？
+                        请先在设置中配置API Key，然后我就能为您提供专业的农牧业咨询服务了！
                     </div>
                     <div class="message-time">刚刚</div>
                 </div>
             </div>
         </div>
 
-        <!-- AI输入和快捷回复区域 -->
         <div class="ai-input-area">
-            <!-- 快捷回复按钮组 -->
-            <div class="quick-replies">
-                <div class="quick-reply" onclick="sendQuickReply('生产管理')">生产管理</div>
-                <div class="quick-reply" onclick="sendQuickReply('养殖技术')">养殖技术</div>
-                <div class="quick-reply" onclick="sendQuickReply('数据分析')">数据分析</div>
-                <div class="quick-reply" onclick="sendQuickReply('系统帮助')">系统帮助</div>
+            <div class="quick-replies" id="quickReplies">
+                <div class="quick-reply" onclick="sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
+                <div class="quick-reply" onclick="sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
+                <div class="quick-reply" onclick="sendQuickReply('如何进行数据分析？')">数据分析</div>
+                <div class="quick-reply" onclick="sendQuickReply('系统操作帮助')">系统帮助</div>
             </div>
-            <!-- 消息输入容器 -->
             <div class="input-container">
                 <textarea class="ai-input"
                           id="aiInput"
                           placeholder="输入您的问题..."
                           rows="1"
                           onkeypress="handleAIKeyPress(event)"
-                          oninput="autoResize(this)"
-                          aria-label="输入消息"></textarea>
-                <button class="send-button" onclick="sendAIMessage()" aria-label="发送消息">
+                          oninput="autoResize(this)"></textarea>
+                <button class="send-button" id="sendButton" onclick="sendAIMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== JavaScript 功能实现 ==================== -->
     <script>
-        /**
-         * ==================== 全局变量定义 ====================
-         */
-
-        // 系统数据配置 - 存储所有业务系统信息
+        // 全局变量
         let systems = [
             {
                 id: 1,
@@ -956,7 +1062,7 @@
                 description: '畜禽养殖生产过程监控、数据统计分析',
                 icon: 'fas fa-chart-area',
                 status: '正常运行',
-                url: '#', // TODO: 替换为实际系统URL
+                url: '#',
                 favorited: false
             },
             {
@@ -1060,518 +1166,174 @@
             }
         ];
 
-        // 应用状态变量
-        let currentViewMode = 'grid'; // 当前视图模式：'grid' 或 'list'
-        let statsTimer = null; // 统计信息更新定时器
-        let aiSidebarOpen = false; // AI侧边栏开启状态
+        let currentViewMode = 'grid';
+        let statsTimer = null;
+        let aiSidebarOpen = false;
+        let apiSettingsOpen = false;
 
-        /**
-         * ==================== 页面初始化 ====================
-         */
+        // AI配置
+        let aiConfig = {
+            baseURL: 'http://3.0.76.119:3000/api',
+            apiKey: '',
+            model: 'gpt-3.5-turbo',
+            maxTokens: 2000,
+            temperature: 0.7
+        };
 
-        // 页面加载完成后执行初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
+        // 当前对话流
+        let currentController = null;
+        let isStreaming = false;
 
-        /**
-         * 应用初始化函数
-         * 设置事件监听器、渲染初始内容、启动定时器等
-         */
-        function initializeApp() {
-            // 渲染系统卡片
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
             renderSystems();
-
-            // 更新页面时间信息
             updateLastUpdateTime();
-
-            // 启动统计数据自动更新
             startStatsUpdate();
+            loadAPISettings();
 
-            // 设置搜索框事件监听
-            setupSearchListeners();
-
-            // 设置键盘快捷键
-            setupKeyboardShortcuts();
-
-            console.log('神农集团数字化平台已初始化完成');
-        }
-
-        /**
-         * 设置搜索功能事件监听器
-         */
-        function setupSearchListeners() {
+            // 搜索框事件监听
             const searchInput = document.getElementById('searchInput');
-
-            // 实时搜索 - 输入时触发
-            searchInput.addEventListener('input', debounce(filterSystems, 300));
-
-            // 回车键搜索
-            searchInput.addEventListener('keypress', function(e) {
+            searchInput.addEventListener('input', filterSystems);
+            searchInput.addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
-                    e.preventDefault();
                     filterSystems();
                 }
             });
-        }
 
-        /**
-         * 设置键盘快捷键
-         */
-        function setupKeyboardShortcuts() {
-            document.addEventListener('keydown', function(e) {
-                // Ctrl/Cmd + K 打开搜索框
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    document.getElementById('searchInput').focus();
-                }
-
-                // ESC 键关闭AI侧边栏
-                if (e.key === 'Escape' && aiSidebarOpen) {
-                    closeAISidebar();
+            // 点击外部关闭API设置
+            document.addEventListener('click', function (e) {
+                const apiSettings = document.getElementById('apiSettings');
+                const settingsBtn = document.querySelector('.settings-btn');
+                if (apiSettingsOpen && !apiSettings.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeAPISettings();
                 }
             });
-        }
+        });
 
-        /**
-         * ==================== 系统卡片渲染功能 ====================
-         */
+        // API设置相关功能
+        function toggleAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettingsOpen = !apiSettingsOpen;
 
-        /**
-         * 渲染系统卡片列表
-         * @param {Array} filteredSystems - 过滤后的系统列表，为空则显示全部
-         */
-        function renderSystems(filteredSystems = null) {
-            const systemsGrid = document.getElementById('systemsGrid');
-            const systemsToRender = filteredSystems || systems;
-
-            // 清空现有内容
-            systemsGrid.innerHTML = '';
-
-            // 检查是否有数据
-            if (systemsToRender.length === 0) {
-                showNoResults();
-                return;
+            if (apiSettingsOpen) {
+                apiSettings.classList.add('show');
             } else {
-                hideNoResults();
-            }
-
-            // 渲染每个系统卡片
-            systemsToRender.forEach((system, index) => {
-                const systemCard = createSystemCard(system, index);
-                systemsGrid.appendChild(systemCard);
-            });
-
-            // 添加卡片入场动画
-            animateCardEntrance();
-        }
-
-        /**
-         * 创建单个系统卡片DOM元素
-         * @param {Object} system - 系统信息对象
-         * @param {number} index - 卡片索引（用于动画延迟）
-         * @returns {HTMLElement} 卡片DOM元素
-         */
-        function createSystemCard(system, index) {
-            const systemCard = document.createElement('div');
-            systemCard.className = 'system-card';
-            systemCard.style.animationDelay = `${index * 0.1}s`; // 错峰入场动画
-
-            // 点击事件 - 打开系统
-            systemCard.onclick = () => openSystem(system);
-
-            // 设置卡片HTML内容
-            systemCard.innerHTML = `
-                <button class="favorite-btn ${system.favorited ? 'favorited' : ''}"
-                        onclick="event.stopPropagation(); toggleFavorite(${system.id})"
-                        aria-label="${system.favorited ? '取消收藏' : '收藏'} ${system.name}">
-                    <i class="fas fa-star"></i>
-                </button>
-                <div class="system-content">
-                    <div class="system-icon">
-                        <i class="${system.icon}"></i>
-                    </div>
-                    <h3 class="system-title">${escapeHtml(system.name)}</h3>
-                    <p class="system-desc">${escapeHtml(system.description)}</p>
-                    <div class="system-status">
-                        <i class="fas fa-circle"></i>
-                        <span>${escapeHtml(system.status)}</span>
-                    </div>
-                </div>
-            `;
-
-            return systemCard;
-        }
-
-        /**
-         * 显示无搜索结果提示
-         */
-        function showNoResults() {
-            document.getElementById('noResults').style.display = 'block';
-        }
-
-        /**
-         * 隐藏无搜索结果提示
-         */
-        function hideNoResults() {
-            document.getElementById('noResults').style.display = 'none';
-        }
-
-        /**
-         * 卡片入场动画
-         */
-        function animateCardEntrance() {
-            const cards = document.querySelectorAll('.system-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-
-                setTimeout(() => {
-                    card.style.transition = 'all 0.5s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        }
-
-        /**
-         * ==================== 搜索过滤功能 ====================
-         */
-
-        /**
-         * 系统搜索过滤函数
-         * 支持按系统名称和描述进行模糊搜索
-         */
-        function filterSystems() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
-
-            // 如果搜索为空，显示所有系统
-            if (!searchQuery) {
-                renderSystems();
-                return;
-            }
-
-            // 执行搜索过滤
-            const filteredSystems = systems.filter(system =>
-                system.name.toLowerCase().includes(searchQuery) ||
-                system.description.toLowerCase().includes(searchQuery)
-            );
-
-            // 渲染过滤结果
-            renderSystems(filteredSystems);
-
-            // 记录搜索行为（用于数据分析）
-            logSearchAction(searchQuery, filteredSystems.length);
-        }
-
-        /**
-         * 记录搜索行为
-         * @param {string} query - 搜索关键词
-         * @param {number} resultCount - 搜索结果数量
-         */
-        function logSearchAction(query, resultCount) {
-            const searchLog = {
-                query: query,
-                resultCount: resultCount,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            };
-
-            // TODO: 发送到后端进行数据分析
-            console.log('搜索记录:', searchLog);
-        }
-
-        /**
-         * ==================== 收藏功能 ====================
-         */
-
-        /**
-         * 切换系统收藏状态
-         * @param {number} systemId - 系统ID
-         */
-        function toggleFavorite(systemId) {
-            const system = systems.find(s => s.id === systemId);
-
-            if (!system) {
-                console.error('未找到系统:', systemId);
-                return;
-            }
-
-            // 切换收藏状态
-            system.favorited = !system.favorited;
-
-            // 更新UI
-            updateFavoriteButton(systemId, system.favorited);
-
-            // 保存收藏列表
-            saveFavoritesToStorage();
-
-            // 显示操作反馈
-            showToast(system.favorited ? `已收藏 ${system.name}` : `已取消收藏 ${system.name}`);
-
-            console.log(`系统 ${system.name} 收藏状态: ${system.favorited}`);
-        }
-
-        /**
-         * 更新收藏按钮UI状态
-         * @param {number} systemId - 系统ID
-         * @param {boolean} favorited - 是否已收藏
-         */
-        function updateFavoriteButton(systemId, favorited) {
-            const favoriteBtn = document.querySelector(`[onclick*="toggleFavorite(${systemId})"]`);
-            if (favoriteBtn) {
-                favoriteBtn.className = `favorite-btn ${favorited ? 'favorited' : ''}`;
-                favoriteBtn.setAttribute('aria-label',
-                    `${favorited ? '取消收藏' : '收藏'} ${systems.find(s => s.id === systemId)?.name}`
-                );
+                apiSettings.classList.remove('show');
             }
         }
 
-        /**
-         * 保存收藏列表到本地存储
-         */
-        function saveFavoritesToStorage() {
-            try {
-                const favorites = systems.filter(s => s.favorited).map(s => s.id);
-                localStorage.setItem('snFavorites', JSON.stringify(favorites));
-            } catch (error) {
-                console.warn('无法保存收藏列表到本地存储:', error);
-            }
+        function closeAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettings.classList.remove('show');
+            apiSettingsOpen = false;
         }
 
-        /**
-         * 从本地存储加载收藏列表
-         */
-        function loadFavoritesFromStorage() {
-            try {
-                const savedFavorites = localStorage.getItem('snFavorites');
-                if (savedFavorites) {
-                    const favoriteIds = JSON.parse(savedFavorites);
-                    systems.forEach(system => {
-                        system.favorited = favoriteIds.includes(system.id);
-                    });
+        function saveAPISettings() {
+            aiConfig.apiKey = document.getElementById('apiKey').value.trim();
+            aiConfig.model = document.getElementById('modelSelect').value;
+            aiConfig.maxTokens = parseInt(document.getElementById('maxTokens').value);
+            aiConfig.temperature = parseFloat(document.getElementById('temperature').value);
+
+            // 保存到本地存储
+            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+
+            // 更新状态
+            updateAIStatus();
+            closeAPISettings();
+
+            // 显示保存成功提示
+            showNotification('API设置已保存！', 'success');
+        }
+
+        function loadAPISettings() {
+            const saved = localStorage.getItem('aiConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    aiConfig = { ...aiConfig, ...config };
+
+                    // 更新界面
+                    document.getElementById('apiKey').value = aiConfig.apiKey;
+                    document.getElementById('modelSelect').value = aiConfig.model;
+                    document.getElementById('maxTokens').value = aiConfig.maxTokens;
+                    document.getElementById('temperature').value = aiConfig.temperature;
+                } catch (e) {
+                    console.error('加载API设置失败:', e);
                 }
-            } catch (error) {
-                console.warn('无法从本地存储加载收藏列表:', error);
             }
+            updateAIStatus();
         }
 
-        /**
-         * ==================== 系统访问功能 ====================
-         */
+        function updateAIStatus() {
+            const statusEl = document.getElementById('aiStatus');
 
-        /**
-         * 打开系统
-         * @param {Object} system - 系统信息对象
-         */
-        function openSystem(system) {
-            // 记录访问日志
-            recordSystemAccess(system);
-
-            // 检查系统URL有效性
-            if (system.url && system.url !== '#') {
-                // 在新标签页打开系统
-                window.open(system.url, '_blank', 'noopener,noreferrer');
+            if (!aiConfig.apiKey) {
+                statusEl.textContent = '请配置API Key';
+                statusEl.className = 'ai-status offline';
+            } else if (isStreaming) {
+                statusEl.textContent = '思考中...';
+                statusEl.className = 'ai-status connecting';
             } else {
-                // 系统暂未配置URL，显示提示
-                showSystemComingSoon(system);
+                statusEl.textContent = '在线中';
+                statusEl.className = 'ai-status';
             }
         }
 
-        /**
-         * 记录系统访问日志
-         * @param {Object} system - 被访问的系统
-         */
-        function recordSystemAccess(system) {
-            const accessLog = {
-                systemId: system.id,
-                systemName: system.name,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                referrer: document.referrer,
-                sessionId: getSessionId()
-            };
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                    color: white;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                    font-size: 14px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+            notification.textContent = message;
 
-            // TODO: 发送访问日志到后端
-            console.log('系统访问记录:', accessLog);
-
-            // 更新统计数据
-            updateAccessStats();
-        }
-
-        /**
-         * 显示系统即将上线提示
-         * @param {Object} system - 系统信息
-         */
-        function showSystemComingSoon(system) {
-            showToast(`${system.name} 即将上线，敬请期待！`, 'info');
-        }
-
-        /**
-         * 更新访问统计数据
-         */
-        function updateAccessStats() {
-            const todayVisitsEl = document.getElementById('todayVisits');
-            const totalVisitsEl = document.getElementById('totalVisits');
-
-            if (todayVisitsEl && totalVisitsEl) {
-                const todayCount = parseInt(todayVisitsEl.textContent) + 1;
-                const totalCount = parseInt(totalVisitsEl.textContent) + 1;
-
-                todayVisitsEl.textContent = todayCount;
-                totalVisitsEl.textContent = totalCount;
-
-                // 添加数字变化动画
-                animateCounterChange(todayVisitsEl);
-                animateCounterChange(totalVisitsEl);
-            }
-        }
-
-        /**
-         * ==================== 视图模式切换 ====================
-         */
-
-        /**
-         * 设置视图模式（网格/列表）
-         * @param {string} mode - 视图模式：'grid' 或 'list'
-         */
-        function setViewMode(mode) {
-            if (!['grid', 'list'].includes(mode)) {
-                console.error('无效的视图模式:', mode);
-                return;
+            // 添加动画样式
+            if (!document.getElementById('notification-style')) {
+                const style = document.createElement('style');
+                style.id = 'notification-style';
+                style.textContent = `
+                        @keyframes slideIn {
+                            from { transform: translateX(100%); opacity: 0; }
+                            to { transform: translateX(0); opacity: 1; }
+                        }
+                        @keyframes slideOut {
+                            from { transform: translateX(0); opacity: 1; }
+                            to { transform: translateX(100%); opacity: 0; }
+                        }
+                    `;
+                document.head.appendChild(style);
             }
 
-            currentViewMode = mode;
-            const systemsContainer = document.getElementById('systemsContainer');
-            const gridBtn = document.getElementById('gridBtn');
-            const listBtn = document.getElementById('listBtn');
+            document.body.appendChild(notification);
 
-            // 更新容器样式类
-            if (mode === 'list') {
-                systemsContainer.classList.add('list-view');
-                gridBtn.classList.remove('active');
-                listBtn.classList.add('active');
-            } else {
-                systemsContainer.classList.remove('list-view');
-                gridBtn.classList.add('active');
-                listBtn.classList.remove('active');
-            }
-
-            // 保存用户偏好到本地存储
-            try {
-                localStorage.setItem('snViewMode', mode);
-            } catch (error) {
-                console.warn('无法保存视图模式偏好:', error);
-            }
-
-            // 记录视图切换行为
-            logViewModeChange(mode);
-        }
-
-        /**
-         * 记录视图模式切换行为
-         * @param {string} mode - 新的视图模式
-         */
-        function logViewModeChange(mode) {
-            console.log('视图模式切换为:', mode);
-            // TODO: 发送用户行为数据到后端
-        }
-
-        /**
-         * ==================== 统计信息更新 ====================
-         */
-
-        /**
-         * 更新最后更新时间显示
-         */
-        function updateLastUpdateTime() {
-            const lastUpdateTimeEl = document.getElementById('lastUpdateTime');
-            if (lastUpdateTimeEl) {
-                lastUpdateTimeEl.textContent = new Date().toLocaleString('zh-CN', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            }
-        }
-
-        /**
-         * 启动统计信息自动更新定时器
-         */
-        function startStatsUpdate() {
-            // 清除已存在的定时器
-            if (statsTimer) {
-                clearInterval(statsTimer);
-            }
-
-            // 每10秒更新一次统计信息
-            statsTimer = setInterval(() => {
-                updateOnlineUsers();
-                updateRandomVisits();
-                updateLastUpdateTime();
-            }, 10000);
-        }
-
-        /**
-         * 模拟更新在线用户数
-         */
-        function updateOnlineUsers() {
-            const onlineUsersEl = document.getElementById('onlineUsers');
-            if (!onlineUsersEl) return;
-
-            const currentUsers = parseInt(onlineUsersEl.textContent);
-            // 模拟用户数变化（±5范围内随机变化）
-            const change = Math.floor(Math.random() * 11) - 5;
-            const newUsers = Math.max(100, Math.min(300, currentUsers + change)); // 限制在100-300之间
-
-            onlineUsersEl.textContent = newUsers;
-            animateCounterChange(onlineUsersEl);
-        }
-
-        /**
-         * 模拟随机访问量增加
-         */
-        function updateRandomVisits() {
-            // 30%概率增加访问量
-            if (Math.random() > 0.7) {
-                updateAccessStats();
-            }
-        }
-
-        /**
-         * 数字变化动画效果
-         * @param {HTMLElement} element - 要添加动画的元素
-         */
-        function animateCounterChange(element) {
-            element.style.transform = 'scale(1.1)';
-            element.style.color = '#DC143C';
-
+            // 3秒后自动移除
             setTimeout(() => {
-                element.style.transform = 'scale(1)';
-                element.style.color = '';
-            }, 200);
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
         }
 
-        /**
-         * ==================== AI助手功能 ====================
-         */
-
-        /**
-         * 切换AI侧边栏显示/隐藏状态
-         */
+        // AI对话相关功能
         function toggleAISidebar() {
             const sidebar = document.getElementById('aiSidebar');
             aiSidebarOpen = !aiSidebarOpen;
 
             if (aiSidebarOpen) {
-                // 显示侧边栏
                 sidebar.classList.add('show');
-                document.body.style.overflow = 'hidden'; // 防止背景滚动
-
-                // 延迟聚焦输入框，等待动画完成
                 setTimeout(() => {
                     const input = document.getElementById('aiInput');
                     if (input) {
@@ -1579,97 +1341,204 @@
                     }
                 }, 400);
             } else {
-                // 隐藏侧边栏
                 sidebar.classList.remove('show');
-                document.body.style.overflow = ''; // 恢复背景滚动
+                if (apiSettingsOpen) {
+                    closeAPISettings();
+                }
             }
         }
 
-        /**
-         * 关闭AI侧边栏
-         */
         function closeAISidebar() {
             const sidebar = document.getElementById('aiSidebar');
             sidebar.classList.remove('show');
-            document.body.style.overflow = '';
             aiSidebarOpen = false;
+            if (apiSettingsOpen) {
+                closeAPISettings();
+            }
+            // 取消当前流式请求
+            if (currentController) {
+                currentController.abort();
+            }
         }
 
-        /**
-         * 处理AI输入框按键事件
-         * @param {KeyboardEvent} event - 键盘事件
-         */
         function handleAIKeyPress(event) {
-            // Enter键发送消息（Shift+Enter换行）
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendAIMessage();
             }
         }
 
-        /**
-         * 自动调整文本框高度
-         * @param {HTMLTextAreaElement} textarea - 文本框元素
-         */
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
         }
 
-        /**
-         * 发送快捷回复
-         * @param {string} message - 快捷回复内容
-         */
         function sendQuickReply(message) {
             const input = document.getElementById('aiInput');
             input.value = message;
             sendAIMessage();
         }
 
-        /**
-         * 发送AI消息
-         */
-        function sendAIMessage() {
+        async function sendAIMessage() {
             const input = document.getElementById('aiInput');
+            const sendButton = document.getElementById('sendButton');
             const message = input.value.trim();
 
-            // 检查消息是否为空
-            if (!message) {
-                showToast('请输入您的问题', 'warning');
+            if (!message || isStreaming) return;
+
+            // 检查API配置
+            if (!aiConfig.apiKey) {
+                showNotification('请先配置API Key', 'error');
+                toggleAPISettings();
                 return;
             }
 
-            // 检查消息长度
-            if (message.length > 500) {
-                showToast('消息长度不能超过500字符', 'warning');
-                return;
-            }
-
-            // 添加用户消息到聊天区域
+            // 添加用户消息
             addAIMessage(message, 'user');
-
-            // 清空输入框并重置高度
             input.value = '';
             input.style.height = 'auto';
 
-            // 显示AI思考状态
-            setTimeout(() => {
-                addTypingIndicator();
+            // 设置发送状态
+            isStreaming = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            updateAIStatus();
 
-                // 模拟AI响应延迟
-                setTimeout(() => {
-                    removeTypingIndicator();
-                    const aiResponse = generateAIResponse(message);
-                    addAIMessage(aiResponse, 'ai');
-                }, getRandomDelay(1000, 2500));
-            }, 300);
+            try {
+                await streamAIResponse(message);
+            } catch (error) {
+                console.error('AI请求失败:', error);
+                addErrorMessage(error.message);
+            } finally {
+                // 恢复发送状态
+                isStreaming = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                updateAIStatus();
+            }
         }
 
-        /**
-         * 添加消息到聊天区域
-         * @param {string} message - 消息内容
-         * @param {string} sender - 发送者类型：'user' 或 'ai'
-         */
+        async function streamAIResponse(userMessage) {
+            const chatArea = document.getElementById('aiChatArea');
+
+            // 创建AI消息容器
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            messageDiv.innerHTML = `
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="message-content ai" id="streamingMessage"></div>
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                `;
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const streamingMessageEl = document.getElementById('streamingMessage');
+            let fullResponse = '';
+
+            try {
+                // 创建AbortController用于取消请求
+                currentController = new AbortController();
+
+                const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${aiConfig.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: '-',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+                            },
+                            {
+                                role: 'user',
+                                content: userMessage
+                            }
+                        ],
+                        max_tokens: aiConfig.maxTokens,
+                        temperature: aiConfig.temperature,
+                        stream: true
+                    }),
+                    signal: currentController.signal
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                break;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+
+                                if (content) {
+                                    fullResponse += content;
+                                    streamingMessageEl.innerHTML = formatMessage(fullResponse);
+                                    chatArea.scrollTop = chatArea.scrollHeight;
+                                }
+                            } catch (e) {
+                                // 忽略解析错误，继续处理下一行
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                // 移除临时ID
+                streamingMessageEl.removeAttribute('id');
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    streamingMessageEl.innerHTML = '<em style="color: #6b7280;">对话已取消</em>';
+                } else {
+                    // 移除失败的消息
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                    throw error;
+                }
+            } finally {
+                currentController = null;
+            }
+        }
+
+        function formatMessage(text) {
+            // 简单的文本格式化
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
         function addAIMessage(message, sender) {
             const chatArea = document.getElementById('aiChatArea');
             const messageDiv = document.createElement('div');
@@ -1681,494 +1550,190 @@
                 minute: '2-digit'
             });
 
-            // 构建消息HTML
             if (sender === 'user') {
                 messageDiv.innerHTML = `
-                    <div class="message-avatar user">👤</div>
-                    <div>
-                        <div class="message-content user">${escapeHtml(message)}</div>
-                        <div class="message-time">${timeStr}</div>
-                    </div>
-                `;
+                        <div class="message-avatar user">👤</div>
+                        <div>
+                            <div class="message-content user">${message}</div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
             } else {
                 messageDiv.innerHTML = `
-                    <div class="message-avatar ai">🐷</div>
-                    <div>
-                        <div class="message-content ai">${message}</div>
-                        <div class="message-time">${timeStr}</div>
-                    </div>
-                `;
+                        <div class="message-avatar ai">🐷</div>
+                        <div>
+                            <div class="message-content ai">${formatMessage(message)}</div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
             }
 
             chatArea.appendChild(messageDiv);
-
-            // 滚动到底部
             chatArea.scrollTop = chatArea.scrollHeight;
-
-            // 记录消息
-            logAIMessage(message, sender);
         }
 
-        /**
-         * 添加AI输入指示器
-         */
-        function addTypingIndicator() {
+        function addErrorMessage(errorMessage) {
             const chatArea = document.getElementById('aiChatArea');
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'chat-message typing-indicator';
-            typingDiv.innerHTML = `
-                <div class="message-avatar ai">🐷</div>
-                <div class="message-content ai" style="padding: 16px;">
-                    <div style="display: flex; gap: 4px; align-items: center;">
-                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #FF69B4; animation: typing 1.4s infinite ease-in-out;"></div>
-                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #FF69B4; animation: typing 1.4s infinite ease-in-out 0.2s;"></div>
-                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #FF69B4; animation: typing 1.4s infinite ease-in-out 0.4s;"></div>
-                    </div>
-                </div>
-            `;
-
-            // 添加输入动画样式
-            if (!document.getElementById('typing-style')) {
-                const style = document.createElement('style');
-                style.id = 'typing-style';
-                style.textContent = `
-                    @keyframes typing {
-                        0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
-                        30% { transform: translateY(-10px); opacity: 1; }
-                    }
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>连接失败：</strong>${errorMessage}
+                    <br><small>请检查API配置或网络连接</small>
                 `;
-                document.head.appendChild(style);
-            }
 
-            chatArea.appendChild(typingDiv);
+            chatArea.appendChild(errorDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        /**
-         * 移除AI输入指示器
-         */
-        function removeTypingIndicator() {
-            const typingIndicator = document.querySelector('.typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
+        // 系统管理相关功能（保持原有功能）
+        function renderSystems(filteredSystems = null) {
+            const systemsGrid = document.getElementById('systemsGrid');
+            const systemsToRender = filteredSystems || systems;
+
+            systemsGrid.innerHTML = '';
+
+            if (systemsToRender.length === 0) {
+                document.getElementById('noResults').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('noResults').style.display = 'none';
+            }
+
+            systemsToRender.forEach(system => {
+                const systemCard = document.createElement('div');
+                systemCard.className = 'system-card';
+                systemCard.onclick = () => openSystem(system);
+
+                systemCard.innerHTML = `
+                        <button class="favorite-btn ${system.favorited ? 'favorited' : ''}"
+                                onclick="event.stopPropagation(); toggleFavorite(${system.id})">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <div class="system-content">
+                            <div class="system-icon">
+                                <i class="${system.icon}"></i>
+                            </div>
+                            <h3 class="system-title">${system.name}</h3>
+                            <p class="system-desc">${system.description}</p>
+                            <div class="system-status">
+                                <i class="fas fa-circle"></i>
+                                <span>${system.status}</span>
+                            </div>
+                        </div>
+                    `;
+
+                systemsGrid.appendChild(systemCard);
+            });
+        }
+
+        function filterSystems() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!searchQuery) {
+                renderSystems();
+                return;
+            }
+
+            const filteredSystems = systems.filter(system =>
+                system.name.toLowerCase().includes(searchQuery) ||
+                system.description.toLowerCase().includes(searchQuery)
+            );
+
+            renderSystems(filteredSystems);
+        }
+
+        function toggleFavorite(systemId) {
+            const system = systems.find(s => s.id === systemId);
+            if (system) {
+                system.favorited = !system.favorited;
+                updateFavorites();
+                renderSystems();
             }
         }
 
-        /**
-         * 生成AI响应内容
-         * @param {string} userMessage - 用户输入的消息
-         * @returns {string} AI响应内容
-         */
-        function generateAIResponse(userMessage) {
-            // 预定义的响应模板
-            const responses = {
-                '生产管理': `🏭 <strong>生产管理平台</strong>功能全面：<br><br>
-                    • 畜禽养殖全流程监控<br>
-                    • 生产数据实时统计分析<br>
-                    • 自动化设备状态监测<br>
-                    • 生产效率优化建议<br><br>
-                    您可以通过"生产管理平台"模块访问详细功能！`,
+        function updateFavorites() {
+            const favorites = systems.filter(s => s.favorited).map(s => s.id);
+            console.log('收藏列表更新:', favorites);
+        }
 
-                '养殖技术': `🐮 <strong>智慧养殖系统</strong>帮您实现：<br><br>
-                    • 环境参数自动监控<br>
-                    • 精准投喂管理<br>
-                    • 动物健康状态跟踪<br>
-                    • 疾病早期预警<br>
-                    • 生长曲线分析<br><br>
-                    通过"智慧养殖系统"和"兽医服务平台"可以获得专业技术支持！`,
+        function openSystem(system) {
+            recordAccess(system);
 
-                '数据分析': `📊 <strong>BI数据分析平台</strong>提供：<br><br>
-                    • 多维度数据可视化<br>
-                    • 生产效率深度分析<br>
-                    • 成本控制精准计算<br>
-                    • 市场趋势预测<br>
-                    • 智能决策支持<br><br>
-                    点击"BI数据分析"模块开始您的数据洞察之旅！`,
+            if (system.url && system.url !== '#') {
+                window.open(system.url, '_blank');
+            } else {
+                alert(`即将打开 ${system.name}`);
+            }
+        }
 
-                '系统帮助': `🔧 <strong>系统操作指南</strong>：<br><br>
-                    • 首页展示所有业务系统<br>
-                    • 搜索框可快速查找功能<br>
-                    • 点击⭐可收藏常用系统<br>
-                    • 网格/列表视图随意切换<br>
-                    • 所有数据实时同步更新<br><br>
-                    如有其他问题，随时问我哦！🐷`,
-
-                '饲料': `🌾 <strong>饲料管理系统</strong>功能：<br><br>
-                    • 科学配方管理<br>
-                    • 库存预警提醒<br>
-                    • 质量追溯体系<br>
-                    • 营养成分分析<br>
-                    • 采购成本优化<br><br>
-                    通过"饲料管理系统"模块可以实现精细化饲料管理！`,
-
-                '财务': `💰 <strong>财务管理系统</strong>包含：<br><br>
-                    • 成本精确核算<br>
-                    • 收支全面管理<br>
-                    • 利润分析预测<br>
-                    • 资金流向监控<br>
-                    • 财务报表自动生成<br><br>
-                    "财务管理系统"让您的每一分钱都清清楚楚！`,
-
-                '环保': `🌿 <strong>环保监测系统</strong>特色：<br><br>
-                    • 污染物实时监测<br>
-                    • 环保数据自动上报<br>
-                    • 治理效果评估<br>
-                    • 合规风险预警<br>
-                    • 绿色生产指导<br><br>
-                    "环保监测系统"助您实现可持续发展！`,
-
-                '你好': `您好！很高兴见到您！🐷✨<br><br>
-                    我是神农晓问，您的专属智能农牧助手。我精通：<br><br>
-                    🔹 畜牧养殖技术<br>
-                    🔹 农业生产管理<br>
-                    🔹 数据分析解读<br>
-                    🔹 系统操作指导<br>
-                    🔹 政策法规咨询<br><br>
-                    有任何问题都可以问我，我会竭诚为您服务！`,
-
-                '帮助': `🆘 我能为您提供的服务：<br><br>
-                    📋 <strong>系统操作</strong><br>
-                    • 功能介绍和使用指导<br>
-                    • 常见问题解答<br><br>
-                    🎯 <strong>专业咨询</strong><br>
-                    • 养殖技术建议<br>
-                    • 生产管理优化<br>
-                    • 数据分析解读<br><br>
-                    📞 <strong>技术支持</strong><br>
-                    • 设备故障诊断<br>
-                    • 系统异常处理<br><br>
-                    请告诉我您具体需要什么帮助！`
+        function recordAccess(system) {
+            const accessLog = {
+                systemId: system.id,
+                systemName: system.name,
+                timestamp: new Date(),
+                userAgent: navigator.userAgent
             };
 
-            // 检查是否匹配预定义关键词
-            for (let keyword in responses) {
-                if (userMessage.includes(keyword)) {
-                    return responses[keyword];
+            console.log('访问记录:', accessLog);
+
+            const todayVisitsEl = document.getElementById('todayVisits');
+            const totalVisitsEl = document.getElementById('totalVisits');
+
+            todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+            totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const systemsContainer = document.getElementById('systemsContainer');
+            const gridBtn = document.getElementById('gridBtn');
+            const listBtn = document.getElementById('listBtn');
+
+            if (mode === 'list') {
+                systemsContainer.classList.add('list-view');
+                gridBtn.classList.remove('active');
+                listBtn.classList.add('active');
+            } else {
+                systemsContainer.classList.remove('list-view');
+                gridBtn.classList.add('active');
+                listBtn.classList.remove('active');
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const lastUpdateTimeEl = document.getElementById('lastUpdateTime');
+            lastUpdateTimeEl.textContent = new Date().toLocaleString('zh-CN');
+        }
+
+        function startStatsUpdate() {
+            statsTimer = setInterval(() => {
+                const onlineUsersEl = document.getElementById('onlineUsers');
+                const todayVisitsEl = document.getElementById('todayVisits');
+                const totalVisitsEl = document.getElementById('totalVisits');
+
+                const currentUsers = parseInt(onlineUsersEl.textContent);
+                const change = Math.floor(Math.random() * 10) - 5;
+                onlineUsersEl.textContent = Math.max(100, currentUsers + change);
+
+                if (Math.random() > 0.7) {
+                    todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+                    totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
                 }
-            }
 
-            // 默认响应
-            return `🐷 感谢您的提问！作为神农集团的AI助手，我正在努力理解您的需求。<br><br>
-                您可以尝试询问关于：<br>
-                • 生产管理 • 养殖技术<br>
-                • 数据分析 • 系统操作<br>
-                • 财务管理 • 环保监测<br><br>
-                或者直接告诉我您想了解哪个具体系统的功能！`;
+                updateLastUpdateTime();
+            }, 10000);
         }
 
-        /**
-         * 记录AI对话消息
-         * @param {string} message - 消息内容
-         * @param {string} sender - 发送者类型
-         */
-        function logAIMessage(message, sender) {
-            const messageLog = {
-                message: message,
-                sender: sender,
-                timestamp: new Date().toISOString(),
-                sessionId: getSessionId()
-            };
-
-            // TODO: 发送到后端进行AI对话分析
-            console.log('AI对话记录:', messageLog);
-        }
-
-        /**
-         * ==================== 工具函数 ====================
-         */
-
-        /**
-         * HTML转义函数，防止XSS攻击
-         * @param {string} text - 要转义的文本
-         * @returns {string} 转义后的文本
-         */
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
-        /**
-         * 防抖函数 - 防止频繁触发事件
-         * @param {Function} func - 要执行的函数
-         * @param {number} wait - 等待时间（毫秒）
-         * @returns {Function} 防抖后的函数
-         */
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        /**
-         * 获取随机延迟时间
-         * @param {number} min - 最小延迟（毫秒）
-         * @param {number} max - 最大延迟（毫秒）
-         * @returns {number} 随机延迟时间
-         */
-        function getRandomDelay(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
-        /**
-         * 获取会话ID（用于用户行为跟踪）
-         * @returns {string} 会话ID
-         */
-        function getSessionId() {
-            let sessionId = sessionStorage.getItem('snSessionId');
-            if (!sessionId) {
-                sessionId = 'sn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                sessionStorage.setItem('snSessionId', sessionId);
-            }
-            return sessionId;
-        }
-
-        /**
-         * 显示Toast提示消息
-         * @param {string} message - 提示消息
-         * @param {string} type - 消息类型：'success', 'error', 'warning', 'info'
-         */
-        function showToast(message, type = 'success') {
-            // 创建Toast元素
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                border-radius: 8px;
-                color: white;
-                font-size: 14px;
-                font-weight: 500;
-                z-index: 10000;
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                max-width: 300px;
-                word-wrap: break-word;
-            `;
-
-            // 设置不同类型的背景色
-            const colors = {
-                success: '#10b981',
-                error: '#ef4444',
-                warning: '#f59e0b',
-                info: '#3b82f6'
-            };
-            toast.style.background = colors[type] || colors.success;
-
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            // 显示动画
-            setTimeout(() => {
-                toast.style.transform = 'translateX(0)';
-            }, 100);
-
-            // 自动隐藏
-            setTimeout(() => {
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 3000);
-        }
-
-        /**
-         * ==================== 错误处理和监控 ====================
-         */
-
-        /**
-         * 全局错误处理
-         */
-        window.addEventListener('error', function(event) {
-            console.error('页面错误:', event.error);
-            // TODO: 发送错误信息到后端监控系统
-        });
-
-        /**
-         * Promise异常处理
-         */
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('未处理的Promise异常:', event.reason);
-            // TODO: 发送错误信息到后端监控系统
-        });
-
-        /**
-         * ==================== 页面卸载处理 ====================
-         */
-
-        /**
-         * 页面卸载时的清理工作
-         */
-        window.addEventListener('beforeunload', function() {
-            // 清理定时器
+        // 页面卸载时清理定时器和请求
+        window.addEventListener('beforeunload', function () {
             if (statsTimer) {
                 clearInterval(statsTimer);
-                statsTimer = null;
             }
-
-            // 发送页面卸载事件
-            logPageUnload();
-        });
-
-        /**
-         * 记录页面卸载事件
-         */
-        function logPageUnload() {
-            const unloadLog = {
-                timestamp: new Date().toISOString(),
-                sessionId: getSessionId(),
-                timeSpent: Date.now() - performance.timing.navigationStart
-            };
-
-            // 使用sendBeacon确保数据发送
-            if (navigator.sendBeacon) {
-                // TODO: 替换为实际的数据收集端点
-                // navigator.sendBeacon('/api/analytics/unload', JSON.stringify(unloadLog));
+            if (currentController) {
+                currentController.abort();
             }
-
-            console.log('页面卸载记录:', unloadLog);
-        }
-
-        /**
-         * ==================== 性能监控 ====================
-         */
-
-        /**
-         * 页面性能监控
-         */
-        window.addEventListener('load', function() {
-            // 等待页面完全加载后再收集性能数据
-            setTimeout(() => {
-                const perfData = {
-                    // 页面加载时间
-                    loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
-                    // DOM准备时间
-                    domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
-                    // 首屏渲染时间
-                    firstPaint: performance.getEntriesByType('paint')[0]?.startTime || 0,
-                    // 最大内容绘制时间
-                    largestContentfulPaint: 0,
-                    // 累计布局偏移
-                    cumulativeLayoutShift: 0
-                };
-
-                // 收集LCP数据
-                if ('PerformanceObserver' in window) {
-                    try {
-                        const lcpObserver = new PerformanceObserver((entryList) => {
-                            const entries = entryList.getEntries();
-                            if (entries.length > 0) {
-                                perfData.largestContentfulPaint = entries[entries.length - 1].startTime;
-                            }
-                        });
-                        lcpObserver.observe({entryTypes: ['largest-contentful-paint']});
-
-                        // 收集CLS数据
-                        const clsObserver = new PerformanceObserver((entryList) => {
-                            for (const entry of entryList.getEntries()) {
-                                if (!entry.hadRecentInput) {
-                                    perfData.cumulativeLayoutShift += entry.value;
-                                }
-                            }
-                        });
-                        clsObserver.observe({entryTypes: ['layout-shift']});
-                    } catch (error) {
-                        console.warn('性能监控初始化失败:', error);
-                    }
-                }
-
-                // TODO: 发送性能数据到后端
-                console.log('页面性能数据:', perfData);
-            }, 1000);
         });
-
-        /**
-         * ==================== 代码审查注释和改进建议 ====================
-         */
-
-        /*
-        ========================================
-        CODE REVIEW 总结和改进建议：
-        ========================================
-
-        ✅ 优点：
-        1. 代码结构清晰，功能模块化
-        2. 注释详细，便于维护
-        3. 错误处理机制完善
-        4. 响应式设计良好
-        5. 用户体验考虑周到
-        6. 性能监控完备
-
-        🔧 主要改进：
-        1. 添加了完整的JSDoc注释
-        2. 增强了错误处理和日志记录
-        3. 优化了搜索功能（防抖、防XSS）
-        4. 改进了AI对话体验
-        5. 添加了性能监控
-        6. 增强了可访问性（aria-label等）
-        7. 优化了动画效果
-        8. 改进了代码组织结构
-
-        ⚠️ 潜在问题和建议：
-        1. 系统URL都是'#'，需要配置实际地址
-        2. localStorage/sessionStorage需要错误处理
-        3. 需要实现后端API集成
-        4. 建议添加国际化支持
-        5. 考虑添加PWA支持
-        6. 建议实现更复杂的AI对话逻辑
-        7. 需要添加单元测试
-        8. 考虑使用TypeScript提高代码质量
-
-        🚀 生产环境建议：
-        1. 压缩CSS和JavaScript
-        2. 使用CDN加速资源加载
-        3. 实现服务端渲染（SSR）
-        4. 添加安全头部配置
-        5. 实现API限流和防爬虫
-        6. 配置监控告警系统
-        7. 添加A/B测试功能
-        8. 实现用户行为分析
-        */
-
-        // 开发环境下的调试工具
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            // 开发模式特有功能
-            window.snDebug = {
-                systems: systems,
-                resetFavorites: () => {
-                    systems.forEach(s => s.favorited = false);
-                    renderSystems();
-                    localStorage.removeItem('snFavorites');
-                },
-                simulateError: () => {
-                    throw new Error('模拟错误用于测试');
-                },
-                getSessionInfo: () => ({
-                    sessionId: getSessionId(),
-                    viewMode: currentViewMode,
-                    aiSidebarOpen: aiSidebarOpen
-                })
-            };
-            console.log('🐷 神农集团数字化平台 - 开发模式已启用');
-            console.log('🔧 调试工具可通过 window.snDebug 访问');
-        }
-
     </script>
 </body>
 </html>
