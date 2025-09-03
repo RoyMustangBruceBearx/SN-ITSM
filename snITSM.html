@@ -442,6 +442,17 @@
                 transform: translateX(0);
             }
 
+            .ai-sidebar.fullscreen {
+                width: 100vw;
+                height: 100vh;
+                top: 0;
+                left: 0;
+                right: 0;
+                border: none;
+                z-index: 2000;
+                transform: none !important;
+            }
+
         .ai-header {
             padding: 20px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -517,7 +528,7 @@
             gap: 8px;
         }
 
-        .settings-btn {
+        .settings-btn, .fullscreen-btn {
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -532,7 +543,7 @@
             font-size: 14px;
         }
 
-            .settings-btn:hover {
+            .settings-btn:hover, .fullscreen-btn:hover {
                 background: rgba(0, 0, 0, 0.1);
                 color: #374151;
             }
@@ -563,6 +574,19 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+        }
+
+        /* 全屏模式下的聊天区域优化 */
+        .ai-sidebar.fullscreen .ai-chat-area {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 40px;
+        }
+
+        .ai-sidebar.fullscreen .ai-input-area {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px 40px 20px;
         }
 
         .chat-message {
@@ -607,17 +631,22 @@
             word-wrap: break-word;
         }
 
-            .message-content.ai {
-                background: rgba(249, 250, 251, 0.8);
-                color: #374151;
-                border-top-left-radius: 6px;
-            }
+        /* 全屏模式下消息内容宽度优化 */
+        .ai-sidebar.fullscreen .message-content {
+            max-width: 600px;
+        }
 
-            .message-content.user {
-                background: linear-gradient(135deg, #4A90E2, #2563eb);
-                color: white;
-                border-top-right-radius: 6px;
-            }
+        .message-content.ai {
+            background: rgba(249, 250, 251, 0.8);
+            color: #374151;
+            border-top-left-radius: 6px;
+        }
+
+        .message-content.user {
+            background: linear-gradient(135deg, #4A90E2, #2563eb);
+            color: white;
+            border-top-right-radius: 6px;
+        }
 
         .message-time {
             font-size: 11px;
@@ -788,6 +817,25 @@
                     box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
                 }
 
+        /* 全屏遮罩层 */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+            .fullscreen-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
         @keyframes aiFloat {
             0%, 100% {
                 transform: translateY(0px);
@@ -866,6 +914,14 @@
             .ai-sidebar {
                 width: 100vw;
             }
+
+                .ai-sidebar.fullscreen .ai-chat-area {
+                    padding: 20px 15px;
+                }
+
+                .ai-sidebar.fullscreen .ai-input-area {
+                    padding: 16px 15px 20px;
+                }
 
             .ai-assistant {
                 bottom: 20px;
@@ -950,7 +1006,7 @@
             <div class="footer-info">
                 <div class="footer-item">
                     <i class="fas fa-industry"></i>
-                    <span>神农集团信息技术部</span>
+                    <span>神农集团信息卓越运营</span>
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-phone-volume"></i>
@@ -958,16 +1014,19 @@
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-envelope-open-text"></i>
-                    <span>support@farm-tech.com</span>
+                    <span>lyl@ynsnjt.com</span>
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-clock"></i>
                     <span>最后更新: <span id="lastUpdateTime"></span></span>
                 </div>
             </div>
-            <p>&copy; 2024 神农集团数字化平台 | 版权所有 | 京ICP备xxxxxxxx号</p>
+            <p>&copy; 2025 神农集团数字化平台 | 版权所有 | 京ICP备xxxxxxxx号</p>
         </footer>
     </div>
+
+    <!-- 全屏遮罩层 -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay"></div>
 
     <!-- AI助手浮动按钮 -->
     <div class="ai-assistant">
@@ -988,6 +1047,9 @@
             <div class="ai-settings">
                 <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
                     <i class="fas fa-cog"></i>
+                </button>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()" title="全屏/退出全屏" id="fullscreenBtn">
+                    <i class="fas fa-expand"></i>
                 </button>
                 <button class="ai-close" onclick="closeAISidebar()">
                     <i class="fas fa-times"></i>
@@ -1170,6 +1232,7 @@
         let statsTimer = null;
         let aiSidebarOpen = false;
         let apiSettingsOpen = false;
+        let isFullscreen = false;
 
         // AI配置
         let aiConfig = {
@@ -1208,7 +1271,42 @@
                     closeAPISettings();
                 }
             });
+
+            // 监听ESC键退出全屏
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && isFullscreen) {
+                    toggleFullscreen();
+                }
+            });
         });
+
+        // 全屏功能
+        function toggleFullscreen() {
+            const sidebar = document.getElementById('aiSidebar');
+            const overlay = document.getElementById('fullscreenOverlay');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+            isFullscreen = !isFullscreen;
+
+            if (isFullscreen) {
+                // 进入全屏
+                overlay.classList.add('show');
+                sidebar.classList.add('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenBtn.title = '退出全屏';
+
+                // 关闭API设置面板
+                if (apiSettingsOpen) {
+                    closeAPISettings();
+                }
+            } else {
+                // 退出全屏
+                overlay.classList.remove('show');
+                sidebar.classList.remove('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = '全屏';
+            }
+        }
 
         // API设置相关功能
         function toggleAPISettings() {
@@ -1283,18 +1381,18 @@
             // 创建通知元素
             const notification = document.createElement('div');
             notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    padding: 12px 20px;
-                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-                    color: white;
-                    border-radius: 8px;
-                    z-index: 10000;
-                    animation: slideIn 0.3s ease;
-                    font-size: 14px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                `;
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 12px 20px;
+                        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                        color: white;
+                        border-radius: 8px;
+                        z-index: 10000;
+                        animation: slideIn 0.3s ease;
+                        font-size: 14px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    `;
             notification.textContent = message;
 
             // 添加动画样式
@@ -1302,15 +1400,15 @@
                 const style = document.createElement('style');
                 style.id = 'notification-style';
                 style.textContent = `
-                        @keyframes slideIn {
-                            from { transform: translateX(100%); opacity: 0; }
-                            to { transform: translateX(0); opacity: 1; }
-                        }
-                        @keyframes slideOut {
-                            from { transform: translateX(0); opacity: 1; }
-                            to { transform: translateX(100%); opacity: 0; }
-                        }
-                    `;
+                            @keyframes slideIn {
+                                from { transform: translateX(100%); opacity: 0; }
+                                to { transform: translateX(0); opacity: 1; }
+                            }
+                            @keyframes slideOut {
+                                from { transform: translateX(0); opacity: 1; }
+                                to { transform: translateX(100%); opacity: 0; }
+                            }
+                        `;
                 document.head.appendChild(style);
             }
 
@@ -1345,16 +1443,37 @@
                 if (apiSettingsOpen) {
                     closeAPISettings();
                 }
+                // 如果是全屏模式，也要退出全屏
+                if (isFullscreen) {
+                    isFullscreen = false;
+                    const overlay = document.getElementById('fullscreenOverlay');
+                    overlay.classList.remove('show');
+                    sidebar.classList.remove('fullscreen');
+                }
             }
         }
 
         function closeAISidebar() {
             const sidebar = document.getElementById('aiSidebar');
+            const overlay = document.getElementById('fullscreenOverlay');
+
             sidebar.classList.remove('show');
             aiSidebarOpen = false;
+
             if (apiSettingsOpen) {
                 closeAPISettings();
             }
+
+            // 退出全屏模式
+            if (isFullscreen) {
+                isFullscreen = false;
+                overlay.classList.remove('show');
+                sidebar.classList.remove('fullscreen');
+                const fullscreenBtn = document.getElementById('fullscreenBtn');
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = '全屏';
+            }
+
             // 取消当前流式请求
             if (currentController) {
                 currentController.abort();
@@ -1376,6 +1495,8 @@
         function sendQuickReply(message) {
             const input = document.getElementById('aiInput');
             input.value = message;
+            // 确保输入框高度正确调整
+            autoResize(input);
             sendAIMessage();
         }
 
@@ -1432,12 +1553,12 @@
             });
 
             messageDiv.innerHTML = `
-                    <div class="message-avatar ai">🐷</div>
-                    <div>
-                        <div class="message-content ai" id="streamingMessage"></div>
-                        <div class="message-time">${timeStr}</div>
-                    </div>
-                `;
+                        <div class="message-avatar ai">🐷</div>
+                        <div>
+                            <div class="message-content ai" id="streamingMessage"></div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
 
             chatArea.appendChild(messageDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
@@ -1552,20 +1673,20 @@
 
             if (sender === 'user') {
                 messageDiv.innerHTML = `
-                        <div class="message-avatar user">👤</div>
-                        <div>
-                            <div class="message-content user">${message}</div>
-                            <div class="message-time">${timeStr}</div>
-                        </div>
-                    `;
+                            <div class="message-avatar user">👤</div>
+                            <div>
+                                <div class="message-content user">${message}</div>
+                                <div class="message-time">${timeStr}</div>
+                            </div>
+                        `;
             } else {
                 messageDiv.innerHTML = `
-                        <div class="message-avatar ai">🐷</div>
-                        <div>
-                            <div class="message-content ai">${formatMessage(message)}</div>
-                            <div class="message-time">${timeStr}</div>
-                        </div>
-                    `;
+                            <div class="message-avatar ai">🐷</div>
+                            <div>
+                                <div class="message-content ai">${formatMessage(message)}</div>
+                                <div class="message-time">${timeStr}</div>
+                            </div>
+                        `;
             }
 
             chatArea.appendChild(messageDiv);
@@ -1577,10 +1698,10 @@
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>连接失败：</strong>${errorMessage}
-                    <br><small>请检查API配置或网络连接</small>
-                `;
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>连接失败：</strong>${errorMessage}
+                        <br><small>请检查API配置或网络连接</small>
+                    `;
 
             chatArea.appendChild(errorDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
@@ -1606,22 +1727,22 @@
                 systemCard.onclick = () => openSystem(system);
 
                 systemCard.innerHTML = `
-                        <button class="favorite-btn ${system.favorited ? 'favorited' : ''}"
-                                onclick="event.stopPropagation(); toggleFavorite(${system.id})">
-                            <i class="fas fa-star"></i>
-                        </button>
-                        <div class="system-content">
-                            <div class="system-icon">
-                                <i class="${system.icon}"></i>
+                            <button class="favorite-btn ${system.favorited ? 'favorited' : ''}"
+                                    onclick="event.stopPropagation(); toggleFavorite(${system.id})">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <div class="system-content">
+                                <div class="system-icon">
+                                    <i class="${system.icon}"></i>
+                                </div>
+                                <h3 class="system-title">${system.name}</h3>
+                                <p class="system-desc">${system.description}</p>
+                                <div class="system-status">
+                                    <i class="fas fa-circle"></i>
+                                    <span>${system.status}</span>
+                                </div>
                             </div>
-                            <h3 class="system-title">${system.name}</h3>
-                            <p class="system-desc">${system.description}</p>
-                            <div class="system-status">
-                                <i class="fas fa-circle"></i>
-                                <span>${system.status}</span>
-                            </div>
-                        </div>
-                    `;
+                        `;
 
                 systemsGrid.appendChild(systemCard);
             });
@@ -1703,7 +1824,11 @@
 
         function updateLastUpdateTime() {
             const lastUpdateTimeEl = document.getElementById('lastUpdateTime');
-            lastUpdateTimeEl.textContent = new Date().toLocaleString('zh-CN');
+            const currentYearEl = document.getElementById('currentYear');
+            const now = new Date();
+
+            lastUpdateTimeEl.textContent = now.toLocaleString('zh-CN');
+            currentYearEl.textContent = now.getFullYear();
         }
 
         function startStatsUpdate() {
