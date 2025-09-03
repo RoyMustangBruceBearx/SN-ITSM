@@ -1006,7 +1006,7 @@
             <div class="footer-info">
                 <div class="footer-item">
                     <i class="fas fa-industry"></i>
-                    <span>神农集团信息卓越运营</span>
+                    <span>神农集团信息技术部</span>
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-phone-volume"></i>
@@ -1014,14 +1014,14 @@
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-envelope-open-text"></i>
-                    <span>lyl@ynsnjt.com</span>
+                    <span>support@farm-tech.com</span>
                 </div>
                 <div class="footer-item">
                     <i class="fas fa-clock"></i>
                     <span>最后更新: <span id="lastUpdateTime"></span></span>
                 </div>
             </div>
-            <p>&copy; 2025 神农集团数字化平台 | 版权所有 | 京ICP备xxxxxxxx号</p>
+            <p>&copy; 2024 神农集团数字化平台 | 版权所有 | 京ICP备xxxxxxxx号</p>
         </footer>
     </div>
 
@@ -1250,7 +1250,6 @@
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function () {
             renderSystems();
-            updateLastUpdateTime();
             startStatsUpdate();
             loadAPISettings();
 
@@ -1436,6 +1435,8 @@
                     const input = document.getElementById('aiInput');
                     if (input) {
                         input.focus();
+                        // 确保输入框高度正确
+                        autoResize(input);
                     }
                 }, 400);
             } else {
@@ -1449,6 +1450,11 @@
                     const overlay = document.getElementById('fullscreenOverlay');
                     overlay.classList.remove('show');
                     sidebar.classList.remove('fullscreen');
+                    const fullscreenBtn = document.getElementById('fullscreenBtn');
+                    if (fullscreenBtn) {
+                        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                        fullscreenBtn.title = '全屏';
+                    }
                 }
             }
         }
@@ -1707,7 +1713,6 @@
             chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        // 系统管理相关功能（保持原有功能）
         function renderSystems(filteredSystems = null) {
             const systemsGrid = document.getElementById('systemsGrid');
             const systemsToRender = filteredSystems || systems;
@@ -1822,13 +1827,107 @@
             }
         }
 
-        function updateLastUpdateTime() {
-            const lastUpdateTimeEl = document.getElementById('lastUpdateTime');
-            const currentYearEl = document.getElementById('currentYear');
-            const now = new Date();
 
-            lastUpdateTimeEl.textContent = now.toLocaleString('zh-CN');
-            currentYearEl.textContent = now.getFullYear();
+        function startStatsUpdate() {
+            statsTimer = setInterval(() => {
+                const onlineUsersEl = document.getElementById('onlineUsers');
+                const todayVisitsEl = document.getElementById('todayVisits');
+                const totalVisitsEl = document.getElementById('totalVisits');
+
+                const currentUsers = parseInt(onlineUsersEl.textContent);
+                const change = Math.floor(Math.random() * 10) - 5;
+                onlineUsersEl.textContent = Math.max(100, currentUsers + change);
+
+                if (Math.random() > 0.7) {
+                    todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+                    totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+                }
+
+            }, 10000);
+        }
+
+        // 页面卸载时清理定时器和请求
+        window.addEventListener('beforeunload', function () {
+            if (statsTimer) {
+                clearInterval(statsTimer);
+            }
+            if (currentController) {
+                currentController.abort();
+            }
+        });
+
+        function filterSystems() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!searchQuery) {
+                renderSystems();
+                return;
+            }
+
+            const filteredSystems = systems.filter(system =>
+                system.name.toLowerCase().includes(searchQuery) ||
+                system.description.toLowerCase().includes(searchQuery)
+            );
+
+            renderSystems(filteredSystems);
+        }
+
+        function toggleFavorite(systemId) {
+            const system = systems.find(s => s.id === systemId);
+            if (system) {
+                system.favorited = !system.favorited;
+                updateFavorites();
+                renderSystems();
+            }
+        }
+
+        function updateFavorites() {
+            const favorites = systems.filter(s => s.favorited).map(s => s.id);
+            console.log('收藏列表更新:', favorites);
+        }
+
+        function openSystem(system) {
+            recordAccess(system);
+
+            if (system.url && system.url !== '#') {
+                window.open(system.url, '_blank');
+            } else {
+                alert(`即将打开 ${system.name}`);
+            }
+        }
+
+        function recordAccess(system) {
+            const accessLog = {
+                systemId: system.id,
+                systemName: system.name,
+                timestamp: new Date(),
+                userAgent: navigator.userAgent
+            };
+
+            console.log('访问记录:', accessLog);
+
+            const todayVisitsEl = document.getElementById('todayVisits');
+            const totalVisitsEl = document.getElementById('totalVisits');
+
+            todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+            totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const systemsContainer = document.getElementById('systemsContainer');
+            const gridBtn = document.getElementById('gridBtn');
+            const listBtn = document.getElementById('listBtn');
+
+            if (mode === 'list') {
+                systemsContainer.classList.add('list-view');
+                gridBtn.classList.remove('active');
+                listBtn.classList.add('active');
+            } else {
+                systemsContainer.classList.remove('list-view');
+                gridBtn.classList.add('active');
+                listBtn.classList.remove('active');
+            }
         }
 
         function startStatsUpdate() {
@@ -1846,7 +1945,6 @@
                     totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
                 }
 
-                updateLastUpdateTime();
             }, 10000);
         }
 
