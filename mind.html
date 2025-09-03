@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线思维导图工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            margin-left: auto;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-picker:hover {
+            transform: scale(1.1);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+            background: linear-gradient(45deg, #f8fafc 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8fafc 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8fafc 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        #mindmap-canvas {
+            cursor: grab;
+            display: block;
+        }
+
+        #mindmap-canvas:active {
+            cursor: grabbing;
+        }
+
+        .node {
+            position: absolute;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            min-width: 80px;
+            text-align: center;
+            cursor: move;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+        }
+
+        .node.selected {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+
+        .node.root {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 120px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+        }
+
+        .node.level-1 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+        }
+
+        .node.level-2 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+        }
+
+        .node.level-3 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border: none;
+        }
+
+        .connection-line {
+            position: absolute;
+            background: #6b7280;
+            border-radius: 1px;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+
+        .node-input {
+            border: none;
+            outline: none;
+            background: transparent;
+            color: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            text-align: center;
+            width: 100%;
+            min-width: 60px;
+        }
+
+        .context-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 8px 0;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: background 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: #f3f4f6;
+        }
+
+        .context-menu-item.danger {
+            color: #dc2626;
+        }
+
+        .context-menu-item.danger:hover {
+            background: #fef2f2;
+        }
+
+        .minimap {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-btn:hover {
+            background: white;
+            border-color: #9ca3af;
+            transform: scale(1.05);
+        }
+
+        .floating-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            min-width: 200px;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .style-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .style-option:hover {
+            transform: scale(1.1);
+            border-color: #9ca3af;
+        }
+
+        .style-option.active {
+            border-color: #3b82f6;
+            transform: scale(1.1);
+        }
+
+        @keyframes nodeAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .node-appear {
+            animation: nodeAppear 0.3s ease-out;
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: #6b7280;
+            backdrop-filter: blur(10px);
+        }
+
+        .help-text {
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo">思维导图工具</div>
+        
+        <div class="toolbar-group">
+            <button class="btn" onclick="newMindmap()">
+                <span>📄</span> 新建
+            </button>
+            <button class="btn" onclick="saveMindmap()">
+                <span>💾</span> 保存
+            </button>
+            <button class="btn" onclick="loadMindmap()">
+                <span>📁</span> 打开
+            </button>
+            <button class="btn btn-primary" onclick="loadITPlanningData()">
+                <span>🏢</span> 加载IT规划
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button class="btn" onclick="undo()" id="undoBtn">
+                <span>↶</span> 撤销
+            </button>
+            <button class="btn" onclick="redo()" id="redoBtn">
+                <span>↷</span> 重做
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button class="btn" onclick="toggleMode('select')" id="selectBtn" class="active">
+                <span>👆</span> 选择
+            </button>
+            <button class="btn" onclick="toggleMode('draw')" id="drawBtn">
+                <span>✏️</span> 绘制
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <div class="color-picker" style="background: #3b82f6" onclick="setNodeColor('#3b82f6')"></div>
+            <div class="color-picker" style="background: #ef4444" onclick="setNodeColor('#ef4444')"></div>
+            <div class="color-picker" style="background: #10b981" onclick="setNodeColor('#10b981')"></div>
+            <div class="color-picker" style="background: #f59e0b" onclick="setNodeColor('#f59e0b')"></div>
+            <div class="color-picker" style="background: #8b5cf6" onclick="setNodeColor('#8b5cf6')"></div>
+        </div>
+
+        <div class="toolbar-group">
+            <button class="btn btn-primary" onclick="exportPNG()">
+                <span>📸</span> 导出图片
+            </button>
+            <button class="btn" onclick="exportJSON()">
+                <span>📋</span> 导出数据
+            </button>
+            <button class="btn" onclick="importJSON()">
+                <span>📥</span> 导入数据
+            </button>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="mindmap-canvas"></canvas>
+        
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">-</button>
+            <button class="zoom-btn" onclick="resetZoom()" style="font-size: 14px;">⌂</button>
+        </div>
+
+        <div class="minimap" id="minimap"></div>
+
+        <div class="floating-panel" id="stylePanel" style="display: none;">
+            <div class="panel-title">节点样式</div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 12px; color: #6b7280;">边框圆角</label>
+                <input type="range" id="borderRadius" min="0" max="20" value="8" style="width: 100%; margin-top: 4px;" oninput="updateNodeStyle()">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #6b7280;">阴影强度</label>
+                <input type="range" id="shadowIntensity" min="0" max="30" value="15" style="width: 100%; margin-top: 4px;" oninput="updateNodeStyle()">
+            </div>
+            <div class="style-options">
+                <div class="style-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="applyGradient('gradient1')"></div>
+                <div class="style-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="applyGradient('gradient2')"></div>
+                <div class="style-option" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="applyGradient('gradient3')"></div>
+                <div class="style-option" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" onclick="applyGradient('gradient4')"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="nodeCount">节点数: 1</span>
+            <span style="margin-left: 20px;" id="zoomLevel">缩放: 100%</span>
+            <span style="margin-left: 20px;">
+                <button class="btn" onclick="showDataViewer()" style="padding: 4px 8px; font-size: 12px;">
+                    📊 查看数据
+                </button>
+            </span>
+            <span class="help-text">双击空白处添加节点 | 拖拽节点移动 | 右键查看更多选项 | 🏢 按钮加载IT规划数据</span>
+        </div>
+
+        <!-- 数据查看器模态框 -->
+        <div id="dataModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(5px);">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 12px; padding: 24px; max-width: 80%; max-height: 80%; overflow: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #1f2937;">思维导图数据结构</h3>
+                    <button onclick="hideDataViewer()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">×</button>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <pre id="dataContent" style="margin: 0; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 400px; overflow: auto;"></pre>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="copyData()" class="btn" style="padding: 8px 16px;">📋 复制数据</button>
+                    <button onclick="exportJSON()" class="btn btn-primary" style="padding: 8px 16px;">💾 导出JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MindMapTool {
+            constructor() {
+                this.canvas = document.getElementById('mindmap-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.nodes = [];
+                this.connections = [];
+                this.selectedNode = null;
+                this.dragNode = null;
+                this.mode = 'select';
+                this.zoom = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.isDragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.history = [];
+                this.historyIndex = -1;
+                this.contextMenu = null;
+                this.nodeIdCounter = 0;
+                
+                this.initCanvas();
+                this.initEventListeners();
+                this.createRootNode();
+                this.saveState();
+                this.render();
+            }
+
+            initCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+                this.render();
+            }
+
+            initEventListeners() {
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                this.canvas.addEventListener('dblclick', (e) => this.handleDoubleClick(e));
+                this.canvas.addEventListener('contextmenu', (e) => this.handleContextMenu(e));
+                this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
+                document.addEventListener('click', (e) => this.hideContextMenu());
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+            }
+
+            createRootNode() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                const rootNode = {
+                    id: this.nodeIdCounter++,
+                    x: centerX,
+                    y: centerY,
+                    width: 120,
+                    height: 40,
+                    text: '中心主题',
+                    level: 0,
+                    parent: null,
+                    children: [],
+                    color: '#667eea',
+                    gradient: 'gradient1',
+                    editing: false
+                };
+                
+                this.nodes.push(rootNode);
+                this.updateNodeCount();
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offsetX) / this.zoom;
+                const y = (e.clientY - rect.top - this.offsetY) / this.zoom;
+
+                this.hideContextMenu();
+                
+                const clickedNode = this.getNodeAt(x, y);
+                
+                if (clickedNode) {
+                    this.selectedNode = clickedNode;
+                    this.dragNode = clickedNode;
+                    this.dragStart = { x: x - clickedNode.x, y: y - clickedNode.y };
+                } else {
+                    this.selectedNode = null;
+                    if (this.mode === 'select') {
+                        this.isDragging = true;
+                        this.dragStart = { x: e.clientX, y: e.clientY };
+                        this.canvas.style.cursor = 'grabbing';
+                    }
+                }
+                
+                this.render();
+            }
+
+            handleMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offsetX) / this.zoom;
+                const y = (e.clientY - rect.top - this.offsetY) / this.zoom;
+
+                if (this.dragNode) {
+                    this.dragNode.x = x - this.dragStart.x;
+                    this.dragNode.y = y - this.dragStart.y;
+                    this.updateConnections();
+                    this.render();
+                } else if (this.isDragging) {
+                    const dx = e.clientX - this.dragStart.x;
+                    const dy = e.clientY - this.dragStart.y;
+                    this.offsetX += dx;
+                    this.offsetY += dy;
+                    this.dragStart = { x: e.clientX, y: e.clientY };
+                    this.render();
+                } else {
+                    const node = this.getNodeAt(x, y);
+                    this.canvas.style.cursor = node ? 'pointer' : 'default';
+                }
+            }
+
+            handleMouseUp(e) {
+                if (this.dragNode) {
+                    this.saveState();
+                }
+                this.dragNode = null;
+                this.isDragging = false;
+                this.canvas.style.cursor = 'default';
+            }
+
+            handleDoubleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offsetX) / this.zoom;
+                const y = (e.clientY - rect.top - this.offsetY) / this.zoom;
+
+                const clickedNode = this.getNodeAt(x, y);
+                
+                if (clickedNode) {
+                    this.startEditing(clickedNode);
+                } else {
+                    this.createNode(x, y);
+                }
+            }
+
+            handleContextMenu(e) {
+                e.preventDefault();
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left - this.offsetX) / this.zoom;
+                const y = (e.clientY - rect.top - this.offsetY) / this.zoom;
+
+                const clickedNode = this.getNodeAt(x, y);
+                this.selectedNode = clickedNode;
+                
+                this.showContextMenu(e.clientX, e.clientY, clickedNode);
+                this.render();
+            }
+
+            handleWheel(e) {
+                e.preventDefault();
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newZoom = Math.max(0.1, Math.min(3, this.zoom * delta));
+                
+                if (newZoom !== this.zoom) {
+                    const factor = newZoom / this.zoom;
+                    this.offsetX = mouseX - (mouseX - this.offsetX) * factor;
+                    this.offsetY = mouseY - (mouseY - this.offsetY) * factor;
+                    this.zoom = newZoom;
+                    
+                    document.getElementById('zoomLevel').textContent = `缩放: ${Math.round(this.zoom * 100)}%`;
+                    this.render();
+                }
+            }
+
+            handleKeyDown(e) {
+                if (e.key === 'Delete' && this.selectedNode && this.selectedNode.level > 0) {
+                    this.deleteNode(this.selectedNode);
+                } else if (e.key === 'Tab' && this.selectedNode) {
+                    e.preventDefault();
+                    this.addChildNode(this.selectedNode);
+                } else if (e.key === 'Enter' && this.selectedNode) {
+                    e.preventDefault();
+                    this.addSiblingNode(this.selectedNode);
+                } else if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z') {
+                        e.preventDefault();
+                        this.undo();
+                    } else if (e.key === 'y' || (e.shiftKey && e.key === 'Z')) {
+                        e.preventDefault();
+                        this.redo();
+                    }
+                }
+            }
+
+            getNodeAt(x, y) {
+                for (let i = this.nodes.length - 1; i >= 0; i--) {
+                    const node = this.nodes[i];
+                    if (x >= node.x - node.width/2 && x <= node.x + node.width/2 &&
+                        y >= node.y - node.height/2 && y <= node.y + node.height/2) {
+                        return node;
+                    }
+                }
+                return null;
+            }
+
+            createNode(x, y, text = '新节点', parentNode = null) {
+                const level = parentNode ? parentNode.level + 1 : 0;
+                const gradients = ['gradient1', 'gradient2', 'gradient3', 'gradient4'];
+                const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b'];
+                
+                const node = {
+                    id: this.nodeIdCounter++,
+                    x: x,
+                    y: y,
+                    width: 80,
+                    height: 32,
+                    text: text,
+                    level: level,
+                    parent: parentNode,
+                    children: [],
+                    color: colors[Math.min(level, 3)],
+                    gradient: gradients[Math.min(level, 3)],
+                    editing: false
+                };
+
+                if (parentNode) {
+                    parentNode.children.push(node);
+                    this.connections.push({
+                        from: parentNode,
+                        to: node
+                    });
+                }
+
+                this.nodes.push(node);
+                this.selectedNode = node;
+                this.updateNodeCount();
+                this.saveState();
+                this.render();
+                
+                // 添加动画效果
+                setTimeout(() => this.startEditing(node), 100);
+            }
+
+            addChildNode(parentNode) {
+                const angle = parentNode.children.length * (Math.PI / 3);
+                const distance = 150;
+                const x = parentNode.x + Math.cos(angle) * distance;
+                const y = parentNode.y + Math.sin(angle) * distance;
+                
+                this.createNode(x, y, '子节点', parentNode);
+            }
+
+            addSiblingNode(node) {
+                if (node.parent) {
+                    const siblings = node.parent.children;
+                    const index = siblings.indexOf(node);
+                    const angle = (index + 1) * (Math.PI / Math.max(2, siblings.length + 1));
+                    const distance = 150;
+                    const x = node.parent.x + Math.cos(angle) * distance;
+                    const y = node.parent.y + Math.sin(angle) * distance;
+                    
+                    this.createNode(x, y, '兄弟节点', node.parent);
+                } else {
+                    // 根节点的兄弟节点
+                    const x = node.x + 200;
+                    const y = node.y;
+                    this.createNode(x, y, '主题');
+                }
+            }
+
+            deleteNode(node) {
+                if (node.level === 0) return; // 不能删除根节点
+
+                // 递归删除所有子节点
+                const deleteRecursive = (n) => {
+                    n.children.forEach(child => deleteRecursive(child));
+                    const index = this.nodes.indexOf(n);
+                    if (index > -1) {
+                        this.nodes.splice(index, 1);
+                    }
+                    // 删除连接
+                    this.connections = this.connections.filter(conn => 
+                        conn.from !== n && conn.to !== n
+                    );
+                };
+
+                // 从父节点的children中移除
+                if (node.parent) {
+                    const index = node.parent.children.indexOf(node);
+                    if (index > -1) {
+                        node.parent.children.splice(index, 1);
+                    }
+                }
+
+                deleteRecursive(node);
+                this.selectedNode = null;
+                this.updateNodeCount();
+                this.saveState();
+                this.render();
+            }
+
+            startEditing(node) {
+                if (node.editing) return;
+                
+                node.editing = true;
+                
+                // 创建临时输入框
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = node.text;
+                input.className = 'node-input';
+                input.style.position = 'absolute';
+                input.style.left = (node.x * this.zoom + this.offsetX - node.width * this.zoom / 2) + 'px';
+                input.style.top = (node.y * this.zoom + this.offsetY - node.height * this.zoom / 2) + 'px';
+                input.style.width = (node.width * this.zoom) + 'px';
+                input.style.height = (node.height * this.zoom) + 'px';
+                input.style.fontSize = (14 * this.zoom) + 'px';
+                input.style.textAlign = 'center';
+                input.style.border = '2px solid #3b82f6';
+                input.style.borderRadius = '6px';
+                input.style.background = 'white';
+                input.style.zIndex = '1000';
+
+                document.body.appendChild(input);
+                input.focus();
+                input.select();
+
+                const finishEditing = () => {
+                    node.text = input.value || '新节点';
+                    node.editing = false;
+                    document.body.removeChild(input);
+                    
+                    // 根据文本长度调整节点宽度
+                    const textWidth = this.ctx.measureText(node.text).width;
+                    node.width = Math.max(80, textWidth + 32);
+                    
+                    this.saveState();
+                    this.render();
+                };
+
+                input.addEventListener('blur', finishEditing);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        finishEditing();
+                    } else if (e.key === 'Escape') {
+                        node.editing = false;
+                        document.body.removeChild(input);
+                        this.render();
+                    }
+                });
+            }
+
+            showContextMenu(x, y, node) {
+                this.hideContextMenu();
+                
+                const menu = document.createElement('div');
+                menu.className = 'context-menu';
+                menu.style.left = x + 'px';
+                menu.style.top = y + 'px';
+
+                const items = node ? [
+                    { text: '编辑文本', action: () => this.startEditing(node) },
+                    { text: '添加子节点', action: () => this.addChildNode(node) },
+                    { text: '添加兄弟节点', action: () => this.addSiblingNode(node) },
+                    { text: '复制节点', action: () => this.copyNode(node) },
+                    { text: '更改样式', action: () => this.showStylePanel(node) },
+                    { text: '删除节点', action: () => this.deleteNode(node), className: 'danger' }
+                ] : [
+                    { text: '添加节点', action: () => this.createNode(x, y) },
+                    { text: '粘贴节点', action: () => this.pasteNode(x, y) }
+                ];
+
+                items.forEach(item => {
+                    const menuItem = document.createElement('div');
+                    menuItem.className = `context-menu-item ${item.className || ''}`;
+                    menuItem.textContent = item.text;
+                    menuItem.addEventListener('click', () => {
+                        item.action();
+                        this.hideContextMenu();
+                    });
+                    menu.appendChild(menuItem);
+                });
+
+                document.body.appendChild(menu);
+                this.contextMenu = menu;
+
+                // 确保菜单在视窗内
+                const rect = menu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    menu.style.left = (x - rect.width) + 'px';
+                }
+                if (rect.bottom > window.innerHeight) {
+                    menu.style.top = (y - rect.height) + 'px';
+                }
+            }
+
+            hideContextMenu() {
+                if (this.contextMenu) {
+                    document.body.removeChild(this.contextMenu);
+                    this.contextMenu = null;
+                }
+            }
+
+            showStylePanel(node) {
+                const panel = document.getElementById('stylePanel');
+                panel.style.display = 'block';
+                this.selectedNode = node;
+            }
+
+            copyNode(node) {
+                this.copiedNode = {
+                    text: node.text,
+                    width: node.width,
+                    height: node.height,
+                    color: node.color,
+                    gradient: node.gradient
+                };
+            }
+
+            pasteNode(x, y) {
+                if (this.copiedNode) {
+                    const node = this.createNode(x, y, this.copiedNode.text);
+                    Object.assign(node, this.copiedNode);
+                    this.render();
+                }
+            }
+
+            updateConnections() {
+                // 连接线会在render中动态绘制，这里不需要特别处理
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.save();
+                this.ctx.translate(this.offsetX, this.offsetY);
+                this.ctx.scale(this.zoom, this.zoom);
+
+                // 绘制连接线
+                this.drawConnections();
+                
+                // 绘制节点
+                this.drawNodes();
+
+                this.ctx.restore();
+            }
+
+            drawConnections() {
+                this.ctx.strokeStyle = '#6b7280';
+                this.ctx.lineWidth = 2;
+
+                this.connections.forEach(conn => {
+                    const from = conn.from;
+                    const to = conn.to;
+
+                    this.ctx.beginPath();
+                    
+                    // 贝塞尔曲线连接
+                    const dx = to.x - from.x;
+                    const dy = to.y - from.y;
+                    const controlPointOffset = Math.min(100, Math.abs(dx) * 0.5);
+                    
+                    this.ctx.moveTo(from.x, from.y);
+                    this.ctx.bezierCurveTo(
+                        from.x + controlPointOffset, from.y,
+                        to.x - controlPointOffset, to.y,
+                        to.x, to.y
+                    );
+                    
+                    this.ctx.stroke();
+                });
+            }
+
+            drawNodes() {
+                this.nodes.forEach(node => {
+                    if (node.editing) return;
+
+                    this.ctx.save();
+
+                    // 阴影效果
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowOffsetY = 4;
+
+                    // 绘制节点背景
+                    this.drawNodeBackground(node);
+
+                    // 绘制选中状态
+                    if (node === this.selectedNode) {
+                        this.ctx.strokeStyle = '#f59e0b';
+                        this.ctx.lineWidth = 3;
+                        this.ctx.setLineDash([5, 5]);
+                        this.ctx.strokeRect(
+                            node.x - node.width/2 - 5,
+                            node.y - node.height/2 - 5,
+                            node.width + 10,
+                            node.height + 10
+                        );
+                        this.ctx.setLineDash([]);
+                    }
+
+                    // 绘制文本
+                    this.drawNodeText(node);
+
+                    this.ctx.restore();
+                });
+            }
+
+            drawNodeBackground(node) {
+                const gradients = {
+                    gradient1: ['#667eea', '#764ba2'],
+                    gradient2: ['#f093fb', '#f5576c'],
+                    gradient3: ['#4facfe', '#00f2fe'],
+                    gradient4: ['#43e97b', '#38f9d7']
+                };
+
+                if (gradients[node.gradient]) {
+                    const gradient = this.ctx.createLinearGradient(
+                        node.x - node.width/2, node.y - node.height/2,
+                        node.x + node.width/2, node.y + node.height/2
+                    );
+                    gradient.addColorStop(0, gradients[node.gradient][0]);
+                    gradient.addColorStop(1, gradients[node.gradient][1]);
+                    this.ctx.fillStyle = gradient;
+                } else {
+                    this.ctx.fillStyle = node.color || '#3b82f6';
+                }
+
+                // 圆角矩形
+                const radius = node.level === 0 ? 12 : 8;
+                this.drawRoundedRect(
+                    node.x - node.width/2,
+                    node.y - node.height/2,
+                    node.width,
+                    node.height,
+                    radius
+                );
+                this.ctx.fill();
+            }
+
+            drawRoundedRect(x, y, width, height, radius) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x + radius, y);
+                this.ctx.lineTo(x + width - radius, y);
+                this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.ctx.lineTo(x + width, y + height - radius);
+                this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.ctx.lineTo(x + radius, y + height);
+                this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.ctx.lineTo(x, y + radius);
+                this.ctx.quadraticCurveTo(x, y, x + radius, y);
+                this.ctx.closePath();
+            }
+
+            drawNodeText(node) {
+                this.ctx.fillStyle = node.level === 0 ? 'white' : (node.gradient ? 'white' : '#1f2937');
+                this.ctx.font = `${node.level === 0 ? '600' : '500'} ${node.level === 0 ? '16' : '14'}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.shadowColor = 'transparent';
+                
+                this.ctx.fillText(node.text, node.x, node.y);
+            }
+
+            updateNodeCount() {
+                document.getElementById('nodeCount').textContent = `节点数: ${this.nodes.length}`;
+            }
+
+            saveState() {
+                const state = {
+                    nodes: JSON.parse(JSON.stringify(this.nodes)),
+                    connections: JSON.parse(JSON.stringify(this.connections)),
+                    nodeIdCounter: this.nodeIdCounter
+                };
+                
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                this.history.push(state);
+                this.historyIndex++;
+                
+                // 限制历史记录数量
+                if (this.history.length > 50) {
+                    this.history.shift();
+                    this.historyIndex--;
+                }
+            }
+
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.restoreState(this.history[this.historyIndex]);
+                }
+            }
+
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.restoreState(this.history[this.historyIndex]);
+                }
+            }
+
+            restoreState(state) {
+                this.nodes = JSON.parse(JSON.stringify(state.nodes));
+                this.connections = JSON.parse(JSON.stringify(state.connections));
+                this.nodeIdCounter = state.nodeIdCounter;
+                this.selectedNode = null;
+                this.updateNodeCount();
+                this.render();
+            }
+
+            zoomIn() {
+                this.zoom = Math.min(3, this.zoom * 1.2);
+                document.getElementById('zoomLevel').textContent = `缩放: ${Math.round(this.zoom * 100)}%`;
+                this.render();
+            }
+
+            zoomOut() {
+                this.zoom = Math.max(0.1, this.zoom / 1.2);
+                document.getElementById('zoomLevel').textContent = `缩放: ${Math.round(this.zoom * 100)}%`;
+                this.render();
+            }
+
+            resetZoom() {
+                this.zoom = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                document.getElementById('zoomLevel').textContent = `缩放: 100%`;
+                this.render();
+            }
+
+            exportPNG() {
+                const link = document.createElement('a');
+                link.download = 'mindmap.png';
+                link.href = this.canvas.toDataURL();
+                link.click();
+            }
+
+            saveMindmap() {
+                const data = {
+                    nodes: this.nodes,
+                    connections: this.connections,
+                    nodeIdCounter: this.nodeIdCounter,
+                    zoom: this.zoom,
+                    offsetX: this.offsetX,
+                    offsetY: this.offsetY
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'mindmap.json';
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+
+            loadMindmap() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const data = JSON.parse(e.target.result);
+                                this.nodes = data.nodes || [];
+                                this.connections = data.connections || [];
+                                this.nodeIdCounter = data.nodeIdCounter || 0;
+                                this.zoom = data.zoom || 1;
+                                this.offsetX = data.offsetX || 0;
+                                this.offsetY = data.offsetY || 0;
+                                this.selectedNode = null;
+                                this.updateNodeCount();
+                                this.render();
+                                this.saveState();
+                            } catch (err) {
+                                alert('文件格式错误！');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+            }
+
+            newMindmap() {
+                if (confirm('确定要创建新的思维导图吗？当前内容将被清除。')) {
+                    this.nodes = [];
+                    this.connections = [];
+                    this.selectedNode = null;
+                    this.nodeIdCounter = 0;
+                    this.zoom = 1;
+                    this.offsetX = 0;
+                    this.offsetY = 0;
+                    this.history = [];
+                    this.historyIndex = -1;
+                    this.createRootNode();
+                    this.saveState();
+                    this.render();
+                }
+            }
+
+            loadFromTreeData(data) {
+                this.nodes = [];
+                this.connections = [];
+                this.nodeIdCounter = 0;
+                this.selectedNode = null;
+                this.zoom = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                // 创建根节点
+                const rootNode = this.createNodeFromData(data, centerX, centerY, 0, null);
+                
+                // 递归创建子节点
+                this.createChildrenNodes(rootNode, data.children);
+                
+                this.updateNodeCount();
+                this.saveState();
+                this.render();
+            }
+
+            createNodeFromData(data, x, y, level, parent) {
+                const gradients = ['gradient1', 'gradient2', 'gradient3', 'gradient4'];
+                const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b'];
+                
+                const node = {
+                    id: this.nodeIdCounter++,
+                    x: x,
+                    y: y,
+                    width: level === 0 ? 200 : Math.max(80, data.name.length * 8 + 32),
+                    height: level === 0 ? 50 : 32,
+                    text: data.name,
+                    level: level,
+                    parent: parent,
+                    children: [],
+                    color: colors[Math.min(level, 3)],
+                    gradient: gradients[Math.min(level, 3)],
+                    editing: false,
+                    note: data.note || null
+                };
+
+                if (parent) {
+                    parent.children.push(node);
+                    this.connections.push({
+                        from: parent,
+                        to: node
+                    });
+                }
+
+                this.nodes.push(node);
+                return node;
+            }
+
+            createChildrenNodes(parentNode, children) {
+                if (!children || children.length === 0) return;
+
+                const radius = 200 + parentNode.level * 100;
+                const angleStep = (2 * Math.PI) / children.length;
+                
+                children.forEach((childData, index) => {
+                    const angle = index * angleStep;
+                    const x = parentNode.x + Math.cos(angle) * radius;
+                    const y = parentNode.y + Math.sin(angle) * radius;
+                    
+                    const childNode = this.createNodeFromData(
+                        childData, 
+                        x, 
+                        y, 
+                        parentNode.level + 1, 
+                        parentNode
+                    );
+                    
+                    // 递归创建子节点的子节点
+                    if (childData.children) {
+                        this.createChildrenNodes(childNode, childData.children);
+                    }
+                });
+            }
+
+            exportToTreeData() {
+                const rootNode = this.nodes.find(node => node.level === 0);
+                if (!rootNode) return null;
+
+                const convertNodeToData = (node) => {
+                    const data = {
+                        name: node.text
+                    };
+                    
+                    if (node.note) {
+                        data.note = node.note;
+                    }
+                    
+                    if (node.children && node.children.length > 0) {
+                        data.children = node.children.map(child => convertNodeToData(child));
+                    }
+                    
+                    return data;
+                };
+
+                return convertNodeToData(rootNode);
+            }
+        }
+
+        // 预设数据 - IT运营业务规划
+        const IT_PLANNING_DATA = {
+            "name": "IT运营业务规划 2025年下半年",
+            "children": [
+                {
+                    "name": "应用",
+                    "children": [
+                        { "name": "SAP" },
+                        { "name": "信息系统" },
+                        { "name": "档案系统" },
+                        { "name": "腾讯企业邮箱" },
+                        { "name": "企业微信" },
+                        { "name": "TMS" },
+                        { "name": "监控安防平台" },
+                        { "name": "VPN" },
+                        { "name": "深信服" },
+                        { "name": "冰峰" },
+                        { "name": "影像系统 国信" },
+                        { "name": "金税系统 航信" },
+                        { "name": "人资系统 北森" },
+                        { "name": "OA系统 泛微" },
+                        { "name": "主数据管理系统 SAP-MDG" },
+                        { "name": "数据分析平台 帆软" },
+                        { "name": "档案系统 鸿翼" },
+                        { "name": "实验室管理系统" },
+                        { "name": "智养家" },
+                        { "name": "青耕管理平台" }
+                    ]
+                },
+                {
+                    "name": "历史",
+                    "children": [
+                        { "name": "SAP SF" },
+                        { "name": "金蝶SHR" },
+                        { "name": "EAS" },
+                        { "name": "信息系统 v1.0" },
+                        { "name": "信息系统 v2.0" },
+                        { "name": "金蝶K3" },
+                        { "name": "保饲佳（porcitec）" }
+                    ]
+                },
+                {
+                    "name": "展示",
+                    "children": [
+                        { "name": "官网" },
+                        { "name": "前台大屏" }
+                    ]
+                },
+                {
+                    "name": "APP",
+                    "children": [
+                        { "name": "神农U宝" },
+                        { "name": "神农U服" }
+                    ]
+                },
+                {
+                    "name": "小程序/H5",
+                    "children": [
+                        { "name": "云南神农集团" },
+                        { "name": "卓越运营中心" },
+                        { "name": "神农信息服务" },
+                        { "name": "神农IT服务" },
+                        { "name": "神农设备管家" },
+                        { "name": "神农智养宝" },
+                        { "name": "司机助手神农智运" },
+                        { "name": "调度助手神农智运" },
+                        { "name": "货主助手神农智运" },
+                        { "name": "神农智运", "note": "神农TMS物流调度：认证后才可以修改名字" }
+                    ]
+                },
+                {
+                    "name": "基础设施",
+                    "children": [
+                        { "name": "域名" },
+                        { "name": "公网IP" },
+                        { "name": "办公设备" },
+                        { "name": "云服务器" },
+                        { "name": "本地服务器" },
+                        { "name": "机房" },
+                        { "name": "网络" },
+                        { "name": "监控" },
+                        { "name": "其他" }
+                    ]
+                },
+                {
+                    "name": "其他",
+                    "children": [
+                        { "name": "事务/业务" }
+                    ]
+                }
+            ]
+        };
+
+        // 全局变量和函数
+        let mindMap;
+
+        // 初始化思维导图
+        window.addEventListener('load', () => {
+            mindMap = new MindMapTool();
+        });
+
+        // 工具栏函数
+        function toggleMode(mode) {
+            mindMap.mode = mode;
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + 'Btn').classList.add('active');
+        }
+
+        function setNodeColor(color) {
+            if (mindMap.selectedNode) {
+                mindMap.selectedNode.color = color;
+                mindMap.selectedNode.gradient = null;
+                mindMap.saveState();
+                mindMap.render();
+            }
+        }
+
+        function applyGradient(gradientName) {
+            if (mindMap.selectedNode) {
+                mindMap.selectedNode.gradient = gradientName;
+                mindMap.saveState();
+                mindMap.render();
+            }
+        }
+
+        function updateNodeStyle() {
+            // 可以在这里添加更多样式更新逻辑
+            mindMap.render();
+        }
+
+        function newMindmap() {
+            mindMap.newMindmap();
+        }
+
+        function saveMindmap() {
+            mindMap.saveMindmap();
+        }
+
+        function loadMindmap() {
+            mindMap.loadMindmap();
+        }
+
+        function undo() {
+            mindMap.undo();
+        }
+
+        function redo() {
+            mindMap.redo();
+        }
+
+        function zoomIn() {
+            mindMap.zoomIn();
+        }
+
+        function zoomOut() {
+            mindMap.zoomOut();
+        }
+
+        function resetZoom() {
+            mindMap.resetZoom();
+        }
+
+        function exportPNG() {
+            mindMap.exportPNG();
+        }
+
+        function loadITPlanningData() {
+            if (confirm('确定要加载IT运营业务规划数据吗？当前内容将被替换。')) {
+                mindMap.loadFromTreeData(IT_PLANNING_DATA);
+            }
+        }
+
+        function exportJSON() {
+            const data = mindMap.exportToTreeData();
+            if (data) {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'mindmap-data.json';
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            mindMap.loadFromTreeData(data);
+                        } catch (err) {
+                            alert('JSON格式错误！');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function showDataViewer() {
+            const data = mindMap.exportToTreeData();
+            if (data) {
+                document.getElementById('dataContent').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('dataModal').style.display = 'block';
+            }
+        }
+
+        function hideDataViewer() {
+            document.getElementById('dataModal').style.display = 'none';
+        }
+
+        function copyData() {
+            const dataContent = document.getElementById('dataContent').textContent;
+            navigator.clipboard.writeText(dataContent).then(() => {
+                alert('数据已复制到剪贴板！');
+            }).catch(() => {
+                alert('复制失败，请手动选择复制。');
+            });
+        }
+    </script>
+</body>
+</html>
