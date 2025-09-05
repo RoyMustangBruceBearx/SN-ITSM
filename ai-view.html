@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神农晓问 - AI智能助手</title>
+    <title>AI智能助手</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -14,123 +14,19 @@
 
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, rgba(74, 144, 226, 0.85) 0%, rgba(46, 58, 89, 0.9) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            background: transparent;
             min-height: 100vh;
             color: #333;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            flex-direction: column;
         }
 
-        .ai-container {
+        .ai-chat-module {
             width: 100%;
-            max-width: 800px;
-            height: 80vh;
-            min-height: 600px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-
-        .ai-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));
-        }
-
-        .ai-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);
-            font-size: 20px;
-        }
-
-        .ai-info {
-            flex: 1;
-        }
-
-        .ai-info h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .ai-status {
-            font-size: 12px;
-            color: #10b981;
-            margin-top: 2px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .ai-status.offline {
-            color: #ef4444;
-        }
-
-        .ai-status.connecting {
-            color: #f59e0b;
-        }
-
-        .ai-status::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: pulse 2s infinite;
-        }
-
-        .ai-status.offline::before {
-            background: #ef4444;
-            animation: none;
-        }
-
-        .ai-status.connecting::before {
-            background: #f59e0b;
-            animation: pulse 1s infinite;
-        }
-
-        .ai-settings {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .settings-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.05);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .settings-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: #374151;
+            background: transparent;
         }
 
         .ai-chat-area {
@@ -140,6 +36,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            background: transparent;
         }
 
         .chat-message {
@@ -176,7 +73,7 @@
         }
 
         .message-content {
-            max-width: 600px;
+            max-width: 280px;
             padding: 12px 16px;
             border-radius: 18px;
             font-size: 14px;
@@ -207,6 +104,7 @@
             padding: 16px 20px 20px;
             border-top: 1px solid rgba(0, 0, 0, 0.08);
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
 
         .quick-replies {
@@ -296,7 +194,7 @@
 
         .api-settings {
             position: absolute;
-            top: 60px;
+            top: 10px;
             right: 20px;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
@@ -365,13 +263,79 @@
             box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-size: 14px;
+            z-index: 1001;
+        }
+
+        .settings-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+        /* 适配不同容器尺寸 */
+        @media (max-width: 400px) {
+            .ai-chat-area {
+                padding: 15px;
             }
-            50% {
-                opacity: 0.5;
+
+            .ai-input-area {
+                padding: 16px 15px 20px;
             }
+
+            .message-content {
+                max-width: 240px;
+            }
+
+            .api-settings {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+        }
+
+        /* 当作为iframe嵌入时的样式优化 */
+        body.embedded {
+            background: transparent;
+        }
+
+        .embedded .ai-chat-area {
+            background: transparent;
+        }
+
+        .embedded .message-content {
+            max-width: 300px;
+        }
+
+        /* 全屏模式时的样式 */
+        body.fullscreen .ai-chat-area {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 40px;
+        }
+
+        body.fullscreen .ai-input-area {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px 40px 20px;
+        }
+
+        body.fullscreen .message-content {
+            max-width: 600px;
         }
 
         @keyframes messageSlide {
@@ -384,76 +348,39 @@
                 transform: translateY(0);
             }
         }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .ai-container {
-                height: 90vh;
-                border-radius: 15px;
-            }
-
-            .ai-chat-area {
-                padding: 15px;
-            }
-
-            .ai-input-area {
-                padding: 16px 15px 20px;
-            }
-
-            .message-content {
-                max-width: 280px;
-            }
-
-            .api-settings {
-                right: 10px;
-                left: 10px;
-                width: auto;
-            }
-        }
     </style>
 </head>
-<body>
-    <div class="ai-container">
-        <div class="ai-header">
-            <div class="ai-avatar">🐷</div>
-            <div class="ai-info">
-                <h3>神农晓问 🐷</h3>
-                <div class="ai-status" id="aiStatus">离线</div>
-            </div>
-            <div class="ai-settings">
-                <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-        </div>
+<body class="embedded">
+    <!-- API设置按钮 -->
+    <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
+        <i class="fas fa-cog"></i>
+    </button>
 
-        <!-- API设置面板 -->
-        <div class="api-settings" id="apiSettings">
-            <h4>API 配置</h4>
-            <label for="apiKey">API Key</label>
-            <input type="password" id="apiKey" placeholder="请输入您的API Key">
+    <!-- API设置面板 -->
+    <div class="api-settings" id="apiSettings">
+        <h4>API 配置</h4>
+        <label for="apiKey">API Key</label>
+        <input type="password" id="apiKey" placeholder="请输入您的API Key">
 
-            <label for="modelSelect">模型选择</label>
-            <select id="modelSelect">
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="llama2">Llama 2</option>
-                <option value="claude-3">Claude 3</option>
-            </select>
+        <label for="modelSelect">模型选择</label>
+        <select id="modelSelect">
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <option value="llama2">Llama 2</option>
+            <option value="claude-3">Claude 3</option>
+        </select>
 
-            <label for="maxTokens">最大令牌数</label>
-            <input type="number" id="maxTokens" value="2000" min="100" max="4000">
+        <label for="maxTokens">最大令牌数</label>
+        <input type="number" id="maxTokens" value="2000" min="100" max="4000">
 
-            <label for="temperature">创造性 (0-1)</label>
-            <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+        <label for="temperature">创造性 (0-1)</label>
+        <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
 
-            <button onclick="saveAPISettings()">保存设置</button>
-        </div>
+        <button onclick="saveAPISettings()">保存设置</button>
+    </div>
 
+    <div class="ai-chat-module">
         <div class="ai-chat-area" id="aiChatArea">
             <div class="chat-message">
                 <div class="message-avatar ai">🐷</div>
@@ -503,8 +430,32 @@
             temperature: 0.7
         };
 
+        // 检测运行环境并自适应
+        function detectEnvironment() {
+            try {
+                // 检测是否在iframe中
+                if (window.self !== window.top) {
+                    document.body.classList.add('embedded');
+                    console.log('AI模块运行在iframe中');
+                }
+                
+                // 检测父窗口是否为全屏模式
+                if (window.parent && window.parent !== window) {
+                    const parentDoc = window.parent.document;
+                    if (parentDoc.querySelector('.ai-sidebar.fullscreen')) {
+                        document.body.classList.add('fullscreen');
+                        console.log('AI模块运行在全屏模式');
+                    }
+                }
+            } catch (e) {
+                // 跨域限制，无法访问父窗口
+                console.log('AI模块运行在独立窗口中');
+            }
+        }
+
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function () {
+            detectEnvironment();
             loadAPISettings();
 
             // 点击外部关闭API设置
@@ -519,8 +470,10 @@
             // 自动聚焦输入框
             const input = document.getElementById('aiInput');
             if (input) {
-                input.focus();
-                autoResize(input);
+                setTimeout(() => {
+                    input.focus();
+                    autoResize(input);
+                }, 100);
             }
         });
 
@@ -551,8 +504,6 @@
             // 保存到本地存储
             localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
 
-            // 更新状态
-            updateAIStatus();
             closeAPISettings();
 
             // 显示保存成功提示
@@ -574,22 +525,6 @@
                 } catch (e) {
                     console.error('加载API设置失败:', e);
                 }
-            }
-            updateAIStatus();
-        }
-
-        function updateAIStatus() {
-            const statusEl = document.getElementById('aiStatus');
-
-            if (!aiConfig.apiKey) {
-                statusEl.textContent = '请配置API Key';
-                statusEl.className = 'ai-status offline';
-            } else if (isStreaming) {
-                statusEl.textContent = '思考中...';
-                statusEl.className = 'ai-status connecting';
-            } else {
-                statusEl.textContent = '在线中';
-                statusEl.className = 'ai-status';
             }
         }
 
@@ -684,7 +619,6 @@
             isStreaming = true;
             sendButton.disabled = true;
             sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            updateAIStatus();
 
             try {
                 await streamAIResponse(message);
@@ -696,7 +630,6 @@
                 isStreaming = false;
                 sendButton.disabled = false;
                 sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                updateAIStatus();
             }
         }
 
@@ -872,6 +805,17 @@
         window.addEventListener('beforeunload', function () {
             if (currentController) {
                 currentController.abort();
+            }
+        });
+
+        // 监听父窗口的消息（用于模式切换等通信）
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'switchMode') {
+                if (event.data.mode === 'fullscreen') {
+                    document.body.classList.add('fullscreen');
+                } else {
+                    document.body.classList.remove('fullscreen');
+                }
             }
         });
     </script>

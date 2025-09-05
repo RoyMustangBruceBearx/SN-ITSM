@@ -422,7 +422,7 @@
         }
 
         /* AI聊天窗口样式 */
-        .ai-chat-window {
+        .ai-sidebar {
             position: fixed;
             top: 0;
             right: 0;
@@ -439,11 +439,22 @@
             box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
         }
 
-            .ai-chat-window.show {
+            .ai-sidebar.show {
                 transform: translateX(0);
             }
 
-        /* 全屏模式样式 */
+            .ai-sidebar.fullscreen {
+                width: 100vw;
+                height: 100vh;
+                top: 0;
+                left: 0;
+                right: 0;
+                border: none;
+                z-index: 2000;
+                transform: none !important;
+            }
+
+        /* 全屏遮罩层 */
         .fullscreen-overlay {
             position: fixed;
             top: 0;
@@ -460,27 +471,6 @@
             .fullscreen-overlay.show {
                 opacity: 1;
                 visibility: visible;
-            }
-
-        .ai-chat-fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-            .ai-chat-fullscreen.show {
-                transform: scale(1);
-                opacity: 1;
             }
 
         @keyframes aiFloat {
@@ -538,7 +528,7 @@
                 font-size: 24px;
             }
 
-            .ai-chat-window {
+            .ai-sidebar {
                 width: 100vw;
             }
         }
@@ -626,7 +616,7 @@
 
     <!-- AI助手浮动按钮 -->
     <div class="ai-assistant">
-        <button class="ai-button" onclick="toggleAIChat()">
+        <button class="ai-button" onclick="toggleAISidebar()">
             <div class="pig-emoji">🐷</div>
             <div class="ai-bubble">我是神农晓问 🐷</div>
         </button>
@@ -635,8 +625,8 @@
     <!-- 全屏遮罩层 -->
     <div class="fullscreen-overlay" id="fullscreenOverlay"></div>
 
-    <!-- AI聊天窗口容器 -->
-    <div id="aiChatContainer"></div>
+    <!-- AI对话侧边栏容器 -->
+    <div id="aiSidebarContainer"></div>
 
     <script>
         // 全局变量
@@ -753,8 +743,8 @@
 
         let currentViewMode = 'grid';
         let statsTimer = null;
-        let aiChatOpen = false;
-        let aiChatMode = 'sidebar'; // 'sidebar' 或 'fullscreen'
+        let aiSidebarOpen = false;
+        let isFullscreen = false;
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function () {
@@ -773,7 +763,7 @@
 
             // 监听ESC键退出全屏
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && aiChatMode === 'fullscreen') {
+                if (e.key === 'Escape' && isFullscreen) {
                     toggleFullscreen();
                 }
             });
@@ -795,139 +785,113 @@
             }
         }
 
-        // AI聊天功能
-        function toggleAIChat() {
-            if (aiChatOpen) {
-                closeAIChat();
+        // AI助手功能
+        function toggleAISidebar() {
+            if (aiSidebarOpen) {
+                closeAISidebar();
             } else {
-                openAIChat();
+                openAISidebar();
             }
         }
 
-        function openAIChat() {
-            if (aiChatOpen) return;
-
-            aiChatOpen = true;
-            loadAIInterface();
+        function openAISidebar() {
+            if (aiSidebarOpen) return;
+            
+            // 创建AI侧边栏iframe，直接引用ai-view.html
+            const aiSidebar = document.createElement('div');
+            aiSidebar.className = 'ai-sidebar';
+            aiSidebar.id = 'aiSidebar';
+            
+            // 创建控制头部
+            const headerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);">🐷</div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
+                            <div style="font-size: 12px; color: #10b981; margin-top: 2px;">在线中</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onclick="toggleFullscreen()" title="全屏/退出全屏" id="fullscreenBtn" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button onclick="openAIWindow()" title="独立窗口" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                        <button onclick="closeAISidebar()" title="关闭" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 创建iframe容器
+            const iframeHTML = `
+                <iframe src="ai-view.html" 
+                        style="flex: 1; border: none; width: 100%; background: white;" 
+                        onload="handleIframeLoad(this)"
+                        onerror="handleIframeError(this)">
+                </iframe>
+            `;
+            
+            aiSidebar.innerHTML = headerHTML + iframeHTML;
+            
+            document.getElementById('aiSidebarContainer').appendChild(aiSidebar);
+            
+            // 显示侧边栏
+            setTimeout(() => {
+                aiSidebar.classList.add('show');
+            }, 50);
+            
+            aiSidebarOpen = true;
         }
 
-        function closeAIChat() {
-            if (!aiChatOpen) return;
-
-            const chatWindow = document.querySelector('.ai-chat-window');
-            const fullscreenChat = document.querySelector('.ai-chat-fullscreen');
+        function closeAISidebar() {
+            const aiSidebar = document.getElementById('aiSidebar');
             const overlay = document.getElementById('fullscreenOverlay');
-
-            if (chatWindow) {
-                chatWindow.classList.remove('show');
+            
+            if (aiSidebar) {
+                aiSidebar.classList.remove('show');
                 setTimeout(() => {
-                    chatWindow.remove();
+                    aiSidebar.remove();
                 }, 400);
             }
-
-            if (fullscreenChat) {
-                fullscreenChat.classList.remove('show');
+            
+            if (overlay.classList.contains('show')) {
                 overlay.classList.remove('show');
-                setTimeout(() => {
-                    fullscreenChat.remove();
-                    overlay.classList.remove('show');
-                }, 300);
             }
-
-            aiChatOpen = false;
-            aiChatMode = 'sidebar';
+            
+            aiSidebarOpen = false;
+            isFullscreen = false;
         }
 
         function toggleFullscreen() {
-            if (aiChatMode === 'sidebar') {
-                // 从侧边栏切换到全屏
-                switchToFullscreen();
-            } else {
-                // 从全屏切换到侧边栏
-                switchToSidebar();
-            }
-        }
-
-        function switchToFullscreen() {
-            const chatWindow = document.querySelector('.ai-chat-window');
+            const aiSidebar = document.getElementById('aiSidebar');
             const overlay = document.getElementById('fullscreenOverlay');
-
-            if (!chatWindow) return;
-
-            // 获取当前聊天内容
-            const chatContent = chatWindow.innerHTML;
-
-            // 创建全屏聊天界面
-            const fullscreenChat = document.createElement('div');
-            fullscreenChat.className = 'ai-chat-fullscreen';
-            fullscreenChat.innerHTML = chatContent;
-
-            // 移除侧边栏
-            chatWindow.classList.remove('show');
-            setTimeout(() => {
-                chatWindow.remove();
-                
-                // 显示全屏界面
-                document.getElementById('aiChatContainer').appendChild(fullscreenChat);
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            
+            if (!aiSidebar) return;
+            
+            isFullscreen = !isFullscreen;
+            
+            if (isFullscreen) {
+                // 进入全屏
                 overlay.classList.add('show');
-                
-                setTimeout(() => {
-                    fullscreenChat.classList.add('show');
-                }, 50);
-
-                // 更新全屏按钮
-                const fullscreenBtn = fullscreenChat.querySelector('#fullscreenBtn');
+                aiSidebar.classList.add('fullscreen');
                 if (fullscreenBtn) {
                     fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
                     fullscreenBtn.title = '退出全屏';
                 }
-
-                // 重新绑定事件
-                bindAIEvents(fullscreenChat);
-            }, 400);
-
-            aiChatMode = 'fullscreen';
-        }
-
-        function switchToSidebar() {
-            const fullscreenChat = document.querySelector('.ai-chat-fullscreen');
-            const overlay = document.getElementById('fullscreenOverlay');
-
-            if (!fullscreenChat) return;
-
-            // 获取当前聊天内容
-            const chatContent = fullscreenChat.innerHTML;
-
-            // 隐藏全屏界面
-            fullscreenChat.classList.remove('show');
-            overlay.classList.remove('show');
-
-            setTimeout(() => {
-                fullscreenChat.remove();
-
-                // 创建侧边栏聊天界面
-                const chatWindow = document.createElement('div');
-                chatWindow.className = 'ai-chat-window';
-                chatWindow.innerHTML = chatContent;
-
-                // 显示侧边栏
-                document.getElementById('aiChatContainer').appendChild(chatWindow);
-                setTimeout(() => {
-                    chatWindow.classList.add('show');
-                }, 50);
-
-                // 更新全屏按钮
-                const fullscreenBtn = chatWindow.querySelector('#fullscreenBtn');
+            } else {
+                // 退出全屏
+                overlay.classList.remove('show');
+                aiSidebar.classList.remove('fullscreen');
                 if (fullscreenBtn) {
                     fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
                     fullscreenBtn.title = '全屏';
                 }
-
-                // 重新绑定事件
-                bindAIEvents(chatWindow);
-            }, 300);
-
-            aiChatMode = 'sidebar';
+            }
         }
 
         function openAIWindow() {
@@ -935,96 +899,30 @@
             window.open('ai-view.html', '_blank', 'width=900,height=700,resizable=yes,scrollbars=no,menubar=no,toolbar=no,location=no,status=no');
         }
 
-        function loadAIInterface() {
-            // 动态加载AI界面内容
-            fetch('ai-view.html')
-                .then(response => response.text())
-                .then(html => {
-                    // 解析HTML，提取body内容
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const aiContainer = doc.querySelector('.ai-container');
-                    
-                    if (aiContainer) {
-                        createAIChatWindow(aiContainer.innerHTML);
-                    } else {
-                        console.error('无法找到AI界面容器');
-                        createFallbackAIInterface();
-                    }
-                })
-                .catch(error => {
-                    console.error('加载AI界面失败:', error);
-                    createFallbackAIInterface();
-                });
+        // iframe加载处理函数
+        function handleIframeLoad(iframe) {
+            console.log('AI界面加载成功');
+            // 可以在这里添加额外的初始化逻辑
         }
 
-        function createAIChatWindow(aiContent) {
-            const chatWindow = document.createElement('div');
-            chatWindow.className = 'ai-chat-window';
-            
-            // 修改AI界面以适应侧边栏
-            const modifiedContent = aiContent
-                .replace(/ai-container/g, 'ai-chat-content')
-                .replace(/width: 800px/g, 'width: 100%')
-                .replace(/max-width: 800px/g, 'max-width: 100%');
-
-            // 添加额外的控制按钮
-            chatWindow.innerHTML = `
-                <div class="ai-header" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+        function handleIframeError(iframe) {
+            console.error('AI界面加载失败');
+            // 显示错误信息并提供备用方案
+            const container = iframe.parentElement;
+            container.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px;">🐷</div>
-                        <div>
-                            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
-                            <div style="font-size: 12px; color: #10b981; margin-top: 2px;">在线中</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button onclick="toggleFullscreen()" title="全屏" id="fullscreenBtn" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                        <button onclick="openAIWindow()" title="独立窗口" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
-                            <i class="fas fa-external-link-alt"></i>
-                        </button>
-                        <button onclick="closeAIChat()" title="关闭" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                ${modifiedContent}
-            `;
-
-            document.getElementById('aiChatContainer').appendChild(chatWindow);
-            
-            // 显示聊天窗口
-            setTimeout(() => {
-                chatWindow.classList.add('show');
-            }, 50);
-
-            // 绑定事件
-            bindAIEvents(chatWindow);
-        }
-
-        function createFallbackAIInterface() {
-            // 备用AI界面
-            const chatWindow = document.createElement('div');
-            chatWindow.className = 'ai-chat-window';
-            chatWindow.innerHTML = `
-                <div class="ai-header" style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px;">🐷</div>
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);">🐷</div>
                         <div>
                             <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
                             <div style="font-size: 12px; color: #ef4444; margin-top: 2px;">加载失败</div>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <button onclick="toggleFullscreen()" title="全屏" id="fullscreenBtn" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
-                            <i class="fas fa-expand"></i>
-                        </button>
                         <button onclick="openAIWindow()" title="独立窗口" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
                             <i class="fas fa-external-link-alt"></i>
                         </button>
-                        <button onclick="closeAIChat()" title="关闭" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280;">
+                        <button onclick="closeAISidebar()" title="关闭" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -1032,37 +930,19 @@
                 <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px; text-align: center; color: #6b7280;">
                     <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px; color: #ef4444;"></i>
                     <h3 style="margin-bottom: 10px; color: #1f2937;">AI界面加载失败</h3>
-                    <p style="margin-bottom: 20px;">无法加载AI聊天界面，请尝试刷新页面或点击独立窗口按钮。</p>
-                    <button onclick="openAIWindow()" style="padding: 10px 20px; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;">
-                        打开独立窗口
+                    <p style="margin-bottom: 20px;">无法加载ai-view.html文件，请检查文件是否存在于同一目录下。</p>
+                    <button onclick="openAIWindow()" style="padding: 10px 20px; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; margin-bottom: 10px;">
+                        <i class="fas fa-external-link-alt"></i> 打开独立窗口
+                    </button>
+                    <br>
+                    <button onclick="location.reload()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;">
+                        <i class="fas fa-redo"></i> 刷新页面重试
                     </button>
                 </div>
             `;
-
-            document.getElementById('aiChatContainer').appendChild(chatWindow);
-            
-            setTimeout(() => {
-                chatWindow.classList.add('show');
-            }, 50);
         }
 
-        function bindAIEvents(container) {
-            // 重新绑定AI界面的事件监听器
-            // 这里需要根据ai-view.html中的具体事件来绑定
-            
-            // 聚焦输入框
-            const aiInput = container.querySelector('#aiInput');
-            if (aiInput) {
-                setTimeout(() => {
-                    aiInput.focus();
-                }, 500);
-            }
-
-            // 绑定其他必要的事件监听器
-            // 注意：这里需要确保ai-view.html中的JavaScript代码也能在这个容器中正常工作
-        }
-
-        // 原有的系统管理功能
+        // 原有的系统管理功能保持不变
         function renderSystems(filteredSystems = null) {
             const systemsGrid = document.getElementById('systemsGrid');
             const systemsToRender = filteredSystems || systems;
