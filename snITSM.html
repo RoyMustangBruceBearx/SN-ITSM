@@ -3,50 +3,534 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 助手</title>
+    <title>神农集团数字化平台</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f9fafb;
+            box-sizing: border-box;
         }
 
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.85) 0%, rgba(46, 58, 89, 0.9) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+            .header h1 {
+                font-size: 2.8rem;
+                background: linear-gradient(45deg, #DC143C, #FF6B6B, #228B22);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 10px;
+                font-weight: 700;
+            }
+
+            .header .subtitle {
+                font-size: 1.2rem;
+                color: #2E3A59;
+                margin-bottom: 20px;
+                font-weight: 500;
+            }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2E3A59;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+            .stat-item i {
+                color: #DC143C;
+            }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+            .search-box input {
+                width: 100%;
+                padding: 12px 45px 12px 20px;
+                border: 2px solid #e0e0e0;
+                border-radius: 25px;
+                font-size: 16px;
+                transition: all 0.3s ease;
+            }
+
+                .search-box input:focus {
+                    outline: none;
+                    border-color: #DC143C;
+                    box-shadow: 0 0 15px rgba(220, 20, 60, 0.3);
+                }
+
+            .search-box button {
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: linear-gradient(45deg, #DC143C, #FF6B6B);
+                border: none;
+                border-radius: 50%;
+                width: 35px;
+                height: 35px;
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(220, 20, 60, 0.3);
+            }
+
+                .search-box button:hover {
+                    background: linear-gradient(45deg, #B71C1C, #DC143C);
+                    transform: translateY(-50%) scale(1.05);
+                    box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+                }
+
+        .view-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            padding: 10px 15px;
+            border: 2px solid #4A90E2;
+            border-radius: 10px;
+            background: rgba(74, 144, 226, 0.1);
+            color: #4A90E2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+            .view-btn.active {
+                background: linear-gradient(45deg, #4A90E2, #87CEEB);
+                color: white;
+                border-color: #4A90E2;
+                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+            }
+
+            .view-btn:hover:not(.active) {
+                background: rgba(74, 144, 226, 0.2);
+                border-color: #DC143C;
+                color: #DC143C;
+            }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .system-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+            opacity: 1;
+            transform: scale(1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+            .system-card.hidden {
+                opacity: 0;
+                transform: scale(0.8);
+                pointer-events: none;
+            }
+
+            .system-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(45deg, #DC143C, #FF6B6B, #4A90E2, #228B22);
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
+
+            .system-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            }
+
+                .system-card:hover::before {
+                    transform: scaleX(1);
+                }
+
+        .system-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #DC143C, #4A90E2, #228B22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .system-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2E3A59;
+        }
+
+        .system-desc {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: linear-gradient(45deg, rgba(34, 139, 34, 0.1), rgba(74, 144, 226, 0.1));
+            border: 1px solid #228B22;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #228B22;
+            font-weight: 500;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .favorite-btn.favorited {
+                color: #DC143C;
+                text-shadow: 0 0 8px rgba(220, 20, 60, 0.5);
+            }
+
+            .favorite-btn:hover {
+                transform: scale(1.2);
+                color: #FF6B6B;
+            }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+            .footer-item i {
+                color: #4A90E2;
+            }
+
+        .list-view .systems-grid {
+            display: block;
+        }
+
+        .list-view .system-card {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            margin-bottom: 15px;
+            padding: 20px;
+        }
+
+        .list-view .system-icon {
+            font-size: 2rem;
+            margin-right: 20px;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .list-view .system-content {
+            flex: 1;
+        }
+
+        .list-view .system-title {
+            margin-bottom: 5px;
+        }
+
+        .list-view .system-desc {
+            margin-bottom: 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #2E3A59;
+        }
+
+            .no-results i {
+                font-size: 4rem;
+                color: #4A90E2;
+                margin-bottom: 20px;
+                opacity: 0.6;
+            }
+
+            .no-results h3 {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+                color: #2E3A59;
+            }
+
+        /* AI助手样式 */
         .ai-assistant {
             position: fixed;
-            right: 24px;
             bottom: 24px;
+            right: 24px;
             z-index: 1000;
         }
 
-        @media (max-width: 600px) {
-            .ai-assistant {
-                right: 10px;
-                bottom: 10px;
+        .ai-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF69B4, #FF1493, #DC143C);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: aiFloat 3s ease-in-out infinite;
+        }
+
+            .ai-button:hover {
+                transform: scale(1.1);
+                box-shadow: 0 8px 25px rgba(255, 20, 147, 0.6);
             }
-            .ai-button {
-                width: 48px;
-                height: 48px;
+
+            .ai-button:active {
+                transform: scale(0.95);
             }
-            .ai-sidebar {
-                width: 100%;
-                height: 100%;
-                max-width: 400px;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
+
+        .pig-emoji {
+            font-size: 28px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .ai-bubble {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 20, 147, 0.2);
+        }
+
+            .ai-bubble::after {
+                content: '';
+                position: absolute;
+                bottom: -6px;
+                right: 16px;
+                width: 0;
+                height: 0;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 6px solid rgba(255, 255, 255, 0.95);
             }
+
+        .ai-button:hover .ai-bubble {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .ai-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
             .ai-sidebar.show {
                 transform: translateX(0);
             }
+
+            .ai-sidebar.fullscreen {
+                width: 100vw;
+                height: 100vh;
+                top: 0;
+                left: 0;
+                right: 0;
+                border: none;
+                z-index: 2000;
+                transform: none !important;
+            }
+
+        .ai-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));
         }
 
-        .ai-button {
-            width: 56px;
-            height: 56px;
+        .ai-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);
+            font-size: 20px;
+        }
+
+        .ai-info {
+            flex: 1;
+        }
+
+            .ai-info h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+        .ai-status {
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+            .ai-status.offline {
+                color: #ef4444;
+            }
+
+            .ai-status.connecting {
+                color: #f59e0b;
+            }
+
+            .ai-status::before {
+                content: '';
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #10b981;
+                animation: pulse 2s infinite;
+            }
+
+            .ai-status.offline::before {
+                background: #ef4444;
+                animation: none;
+            }
+
+            .ai-status.connecting::before {
+                background: #f59e0b;
+                animation: pulse 1s infinite;
+            }
+
+        .ai-settings {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn, .fullscreen-btn {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: rgba(0, 0, 0, 0.05);
             border: none;
@@ -56,36 +540,13 @@
             justify-content: center;
             transition: all 0.2s ease;
             color: #6b7280;
+            font-size: 14px;
         }
 
-        .ai-button:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: #374151;
-        }
-
-        .ai-sidebar {
-            width: 360px;
-            height: 500px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease;
-        }
-
-        .ai-sidebar.fullscreen {
-            width: 100%;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.8);
-            border-radius: 0;
-            transform: translateX(0);
-        }
-
-        .settings-btn:hover, .fullscreen-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: #374151;
-        }
+            .settings-btn:hover, .fullscreen-btn:hover {
+                background: rgba(0, 0, 0, 0.1);
+                color: #374151;
+            }
 
         .ai-close {
             width: 32px;
@@ -99,15 +560,12 @@
             justify-content: center;
             transition: all 0.2s ease;
             color: #6b7280;
-            position: absolute;
-            top: 16px;
-            right: 16px;
         }
 
-        .ai-close:hover {
-            background: rgba(0, 0, 0, 0.1);
-            color: #374151;
-        }
+            .ai-close:hover {
+                background: rgba(0, 0, 0, 0.1);
+                color: #374151;
+            }
 
         .ai-chat-area {
             flex: 1;
@@ -116,48 +574,31 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            scrollbar-width: none; /* Firefox */
-        }
-        .ai-chat-area::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Edge */
         }
 
+        /* 全屏模式下的聊天区域优化 */
         .ai-sidebar.fullscreen .ai-chat-area {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px 40px;
-            height: calc(100% - 150px);
-            overflow-y: auto;
         }
 
         .ai-sidebar.fullscreen .ai-input-area {
             max-width: 800px;
             margin: 0 auto;
             padding: 16px 40px 20px;
-            max-height: 100px;
         }
 
         .chat-message {
             display: flex;
             gap: 8px;
             align-items: flex-start;
-            animation: messageSlide 0.4s ease-out;
+            animation: messageSlide 0.3s ease;
         }
 
-        @keyframes messageSlide {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+            .chat-message.user {
+                flex-direction: row-reverse;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .chat-message.user {
-            flex-direction: row-reverse;
-        }
 
         .message-avatar {
             width: 32px;
@@ -170,16 +611,16 @@
             font-size: 14px;
         }
 
-        .message-avatar.ai {
-            background: linear-gradient(135deg, #FF69B4, #FF1493);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-        }
+            .message-avatar.ai {
+                background: linear-gradient(135deg, #FF69B4, #FF1493);
+                color: white;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+            }
 
-        .message-avatar.user {
-            background: linear-gradient(135deg, #4A90E2, #2563eb);
-            color: white;
-        }
+            .message-avatar.user {
+                background: linear-gradient(135deg, #4A90E2, #2563eb);
+                color: white;
+            }
 
         .message-content {
             max-width: 280px;
@@ -190,6 +631,7 @@
             word-wrap: break-word;
         }
 
+        /* 全屏模式下消息内容宽度优化 */
         .ai-sidebar.fullscreen .message-content {
             max-width: 600px;
         }
@@ -223,57 +665,766 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            margin-bottom: 16px;
         }
 
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
+        .quick-reply {
+            padding: 6px 12px;
+            background: rgba(255, 20, 147, 0.1);
+            border: 1px solid rgba(255, 20, 147, 0.2);
+            border-radius: 16px;
+            font-size: 12px;
+            color: #FF1493;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .notification {
-            position: fixed;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #fff;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            padding: 16px 24px;
+            .quick-reply:hover {
+                background: rgba(255, 20, 147, 0.2);
+                transform: translateY(-1px);
+            }
+
+        .input-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .ai-input {
+            flex: 1;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 10px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+            .ai-input:focus {
+                border-color: #FF1493;
+                box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
+            }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 16px;
+        }
+
+            .send-button:hover:not(:disabled) {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+            }
+
+            .send-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+
+        .api-settings {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
-            z-index: 1001;
-            animation: slideOut 0.3s ease forwards;
+            padding: 16px;
+            width: 280px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1002;
+            transform: scale(0.95) translateY(-10px);
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+            .api-settings.show {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .api-settings h4 {
+                margin: 0 0 12px 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1f2937;
+            }
+
+            .api-settings label {
+                display: block;
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 4px;
+            }
+
+            .api-settings input, .api-settings select {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                border-radius: 6px;
+                font-size: 12px;
+                margin-bottom: 12px;
+                background: rgba(255, 255, 255, 0.9);
+            }
+
+                .api-settings input:focus, .api-settings select:focus {
+                    outline: none;
+                    border-color: #FF1493;
+                    box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.1);
+                }
+
+            .api-settings button {
+                width: 100%;
+                padding: 8px 16px;
+                background: linear-gradient(135deg, #FF69B4, #FF1493);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+                .api-settings button:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+                }
+
+        /* 全屏遮罩层 */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+            .fullscreen-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        @keyframes aiFloat {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .systems-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .stats-bar {
+                gap: 20px;
+            }
+
+            .footer-info {
+                gap: 20px;
+            }
+
+            .ai-sidebar {
+                width: 100vw;
+            }
+
+                .ai-sidebar.fullscreen .ai-chat-area {
+                    padding: 20px 15px;
+                }
+
+                .ai-sidebar.fullscreen .ai-input-area {
+                    padding: 16px 15px 20px;
+                }
+
+            .ai-assistant {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .ai-button {
+                width: 56px;
+                height: 56px;
+            }
+
+            .pig-emoji {
+                font-size: 24px;
+            }
+
+            .api-settings {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="ai-assistant">
-        <button class="ai-button" id="aiButton">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
-                <path d="M5 5h2v14H5zm8 0h2v14h-2zm8 0h2v14h-2z"/>
-            </svg>
-        </button>
-        <div class="ai-sidebar" id="aiSidebar">
-            <button class="ai-close" onclick="toggleAISidebar()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px;">
-                    <path d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-            <div class="ai-chat-area" id="aiChatArea">
-                <!-- 聊天消息将在这里动态添加 -->
+    <div class="container">
+        <!-- 头部区域 -->
+        <header class="header">
+            <h1><i class="fas fa-piggy-bank"></i> 神农集团数字化平台</h1>
+            <p class="subtitle">现代农牧业 · 智慧管理 · 数字未来</p>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <i class="fas fa-user-friends"></i>
+                    <span>在线用户: <span id="onlineUsers">156</span></span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>今日访问: <span id="todayVisits">2847</span></span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-globe-americas"></i>
+                    <span>总访问量: <span id="totalVisits">1256789</span></span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>系统状态: <span style="color: #228B22; font-weight: 600;">正常</span></span>
+                </div>
             </div>
-            <div class="ai-input-area" id="aiInputArea">
-                <input type="text" id="aiInput" placeholder="输入消息..." style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 8px;">
-                <button class="send-btn">发送</button>
+        </header>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="search-box">
+                <input type="text"
+                       placeholder="搜索系统、功能..."
+                       id="searchInput">
+                <button onclick="filterSystems()"><i class="fas fa-search-plus"></i></button>
+            </div>
+            <div class="view-controls">
+                <button class="view-btn active" id="gridBtn" onclick="setViewMode('grid')">
+                    <i class="fas fa-th-large"></i> 网格
+                </button>
+                <button class="view-btn" id="listBtn" onclick="setViewMode('list')">
+                    <i class="fas fa-list-ul"></i> 列表
+                </button>
+            </div>
+        </div>
+
+        <!-- 系统列表 -->
+        <div class="systems-container" id="systemsContainer">
+            <div class="systems-grid" id="systemsGrid">
+                <!-- 系统卡片将通过JavaScript动态生成 -->
+            </div>
+            <div class="no-results" id="noResults" style="display: none;">
+                <i class="fas fa-search-minus"></i>
+                <h3>未找到相关系统</h3>
+                <p>请尝试其他关键词</p>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <div class="footer-info">
+                <div class="footer-item">
+                    <i class="fas fa-industry"></i>
+                    <span>神农集团信息技术部</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-phone-volume"></i>
+                    <span>技术支持: 400-888-8888</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>support@farm-tech.com</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-clock"></i>
+                    <span>最后更新: <span id="lastUpdateTime"></span></span>
+                </div>
+            </div>
+            <p>&copy; 2024 神农集团数字化平台 | 版权所有 | 京ICP备xxxxxxxx号</p>
+        </footer>
+    </div>
+
+    <!-- 全屏遮罩层 -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay"></div>
+
+    <!-- AI助手浮动按钮 -->
+    <div class="ai-assistant">
+        <button class="ai-button" onclick="toggleAISidebar()">
+            <div class="pig-emoji">🐷</div>
+            <div class="ai-bubble">我是神农晓问 🐷</div>
+        </button>
+    </div>
+
+    <!-- AI对话侧边栏 -->
+    <div class="ai-sidebar" id="aiSidebar">
+        <div class="ai-header">
+            <div class="ai-avatar">🐷</div>
+            <div class="ai-info">
+                <h3>神农晓问 🐷</h3>
+                <div class="ai-status" id="aiStatus">离线</div>
+            </div>
+            <div class="ai-settings">
+                <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()" title="全屏/退出全屏" id="fullscreenBtn">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button class="ai-close" onclick="closeAISidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- API设置面板 -->
+        <div class="api-settings" id="apiSettings">
+            <h4>API 配置</h4>
+            <label for="apiKey">API Key</label>
+            <input type="password" id="apiKey" placeholder="请输入您的API Key">
+
+            <label for="modelSelect">模型选择</label>
+            <select id="modelSelect">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="llama2">Llama 2</option>
+                <option value="claude-3">Claude 3</option>
+            </select>
+
+            <label for="maxTokens">最大令牌数</label>
+            <input type="number" id="maxTokens" value="2000" min="100" max="4000">
+
+            <label for="temperature">创造性 (0-1)</label>
+            <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+
+            <button onclick="saveAPISettings()">保存设置</button>
+        </div>
+
+        <div class="ai-chat-area" id="aiChatArea">
+            <div class="chat-message">
+                <div class="message-avatar ai">🐷</div>
+                <div>
+                    <div class="message-content ai">
+                        您好！我是神农晓问，您的专属智能农牧助手！🐷✨<br><br>
+                        请先在设置中配置API Key，然后我就能为您提供专业的农牧业咨询服务了！
+                    </div>
+                    <div class="message-time">刚刚</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-input-area">
+            <div class="quick-replies" id="quickReplies">
+                <div class="quick-reply" onclick="sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
+                <div class="quick-reply" onclick="sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
+                <div class="quick-reply" onclick="sendQuickReply('如何进行数据分析？')">数据分析</div>
+                <div class="quick-reply" onclick="sendQuickReply('系统操作帮助')">系统帮助</div>
+            </div>
+            <div class="input-container">
+                <textarea class="ai-input"
+                          id="aiInput"
+                          placeholder="输入您的问题..."
+                          rows="1"
+                          onkeypress="handleAIKeyPress(event)"
+                          oninput="autoResize(this)"></textarea>
+                <button class="send-button" id="sendButton" onclick="sendAIMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // 全局变量
+        let systems = [
+            {
+                id: 1,
+                name: '生产管理平台',
+                description: '畜禽养殖生产过程监控、数据统计分析',
+                icon: 'fas fa-chart-area',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 2,
+                name: '智慧养殖系统',
+                description: '环境监控、自动投喂、健康管理',
+                icon: 'fas fa-home',
+                status: '正常运行',
+                url: '#',
+                favorited: true
+            },
+            {
+                id: 3,
+                name: '饲料管理系统',
+                description: '饲料配方、库存管理、质量追溯',
+                icon: 'fas fa-seedling',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 4,
+                name: '兽医服务平台',
+                description: '动物健康监测、疫病防控、诊疗记录',
+                icon: 'fas fa-user-md',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 5,
+                name: '智慧物流系统',
+                description: '运输调度、路径优化、货物跟踪',
+                icon: 'fas fa-shipping-fast',
+                status: '正常运行',
+                url: '#',
+                favorited: true
+            },
+            {
+                id: 6,
+                name: '食品安全追溯',
+                description: '从养殖到餐桌的全链条质量追溯',
+                icon: 'fas fa-shield-virus',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 7,
+                name: '财务管理系统',
+                description: '成本核算、收支管理、财务分析',
+                icon: 'fas fa-coins',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 8,
+                name: '人力资源平台',
+                description: '员工管理、考勤统计、薪酬计算',
+                icon: 'fas fa-user-tie',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 9,
+                name: '环保监测系统',
+                description: '污染物监测、环保数据上报、治理效果',
+                icon: 'fas fa-leaf',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 10,
+                name: 'BI数据分析',
+                description: '数据可视化、经营分析、决策支持',
+                icon: 'fas fa-chart-pie',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 11,
+                name: '采购管理平台',
+                description: '供应商管理、采购流程、合同管理',
+                icon: 'fas fa-handshake',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            },
+            {
+                id: 12,
+                name: '移动办公OA',
+                description: '审批流程、文档管理、移动办公',
+                icon: 'fas fa-mobile-alt',
+                status: '正常运行',
+                url: '#',
+                favorited: false
+            }
+        ];
+
+        let currentViewMode = 'grid';
+        let statsTimer = null;
         let aiSidebarOpen = false;
         let apiSettingsOpen = false;
         let isFullscreen = false;
 
-        document.getElementById('aiButton').addEventListener('click', toggleAISidebar);
+        // AI配置
+        let aiConfig = {
+            baseURL: 'http://3.0.76.119:3000/api',
+            apiKey: '',
+            model: 'gpt-3.5-turbo',
+            maxTokens: 2000,
+            temperature: 0.7
+        };
 
+        // 当前对话流
+        let currentController = null;
+        let isStreaming = false;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            renderSystems();
+            startStatsUpdate();
+            loadAPISettings();
+
+            // 搜索框事件监听
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', filterSystems);
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    filterSystems();
+                }
+            });
+
+            // 点击外部关闭API设置
+            document.addEventListener('click', function (e) {
+                const apiSettings = document.getElementById('apiSettings');
+                const settingsBtn = document.querySelector('.settings-btn');
+                if (apiSettingsOpen && !apiSettings.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeAPISettings();
+                }
+            });
+
+            // 监听ESC键退出全屏
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && isFullscreen) {
+                    toggleFullscreen();
+                }
+            });
+        });
+
+        // 全屏功能
+        function toggleFullscreen() {
+            const sidebar = document.getElementById('aiSidebar');
+            const overlay = document.getElementById('fullscreenOverlay');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+            isFullscreen = !isFullscreen;
+
+            if (isFullscreen) {
+                // 进入全屏
+                overlay.classList.add('show');
+                sidebar.classList.add('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenBtn.title = '退出全屏';
+
+                // 关闭API设置面板
+                if (apiSettingsOpen) {
+                    closeAPISettings();
+                }
+            } else {
+                // 退出全屏
+                overlay.classList.remove('show');
+                sidebar.classList.remove('fullscreen');
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = '全屏';
+            }
+        }
+
+        // API设置相关功能
+        function toggleAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettingsOpen = !apiSettingsOpen;
+
+            if (apiSettingsOpen) {
+                apiSettings.classList.add('show');
+            } else {
+                apiSettings.classList.remove('show');
+            }
+        }
+
+        function closeAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettings.classList.remove('show');
+            apiSettingsOpen = false;
+        }
+
+        function saveAPISettings() {
+            aiConfig.apiKey = document.getElementById('apiKey').value.trim();
+            aiConfig.model = document.getElementById('modelSelect').value;
+            aiConfig.maxTokens = parseInt(document.getElementById('maxTokens').value);
+            aiConfig.temperature = parseFloat(document.getElementById('temperature').value);
+
+            // 保存到本地存储
+            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+
+            // 更新状态
+            updateAIStatus();
+            closeAPISettings();
+
+            // 显示保存成功提示
+            showNotification('API设置已保存！', 'success');
+        }
+
+        function loadAPISettings() {
+            const saved = localStorage.getItem('aiConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    aiConfig = { ...aiConfig, ...config };
+
+                    // 更新界面
+                    document.getElementById('apiKey').value = aiConfig.apiKey;
+                    document.getElementById('modelSelect').value = aiConfig.model;
+                    document.getElementById('maxTokens').value = aiConfig.maxTokens;
+                    document.getElementById('temperature').value = aiConfig.temperature;
+                } catch (e) {
+                    console.error('加载API设置失败:', e);
+                }
+            }
+            updateAIStatus();
+        }
+
+        function updateAIStatus() {
+            const statusEl = document.getElementById('aiStatus');
+
+            if (!aiConfig.apiKey) {
+                statusEl.textContent = '请配置API Key';
+                statusEl.className = 'ai-status offline';
+            } else if (isStreaming) {
+                statusEl.textContent = '思考中...';
+                statusEl.className = 'ai-status connecting';
+            } else {
+                statusEl.textContent = '在线中';
+                statusEl.className = 'ai-status';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 12px 20px;
+                        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                        color: white;
+                        border-radius: 8px;
+                        z-index: 10000;
+                        animation: slideIn 0.3s ease;
+                        font-size: 14px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    `;
+            notification.textContent = message;
+
+            // 添加动画样式
+            if (!document.getElementById('notification-style')) {
+                const style = document.createElement('style');
+                style.id = 'notification-style';
+                style.textContent = `
+                            @keyframes slideIn {
+                                from { transform: translateX(100%); opacity: 0; }
+                                to { transform: translateX(0); opacity: 1; }
+                            }
+                            @keyframes slideOut {
+                                from { transform: translateX(0); opacity: 1; }
+                                to { transform: translateX(100%); opacity: 0; }
+                            }
+                        `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            // 3秒后自动移除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // AI对话相关功能
         function toggleAISidebar() {
             const sidebar = document.getElementById('aiSidebar');
             aiSidebarOpen = !aiSidebarOpen;
@@ -284,6 +1435,7 @@
                     const input = document.getElementById('aiInput');
                     if (input) {
                         input.focus();
+                        // 确保输入框高度正确
                         autoResize(input);
                     }
                 }, 400);
@@ -292,43 +1444,518 @@
                 if (apiSettingsOpen) {
                     closeAPISettings();
                 }
+                // 如果是全屏模式，也要退出全屏
                 if (isFullscreen) {
                     isFullscreen = false;
                     const overlay = document.getElementById('fullscreenOverlay');
-                    if (overlay) {
-                        document.body.removeChild(overlay);
-                    }
+                    overlay.classList.remove('show');
                     sidebar.classList.remove('fullscreen');
+                    const fullscreenBtn = document.getElementById('fullscreenBtn');
+                    if (fullscreenBtn) {
+                        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                        fullscreenBtn.title = '全屏';
+                    }
                 }
             }
         }
 
-        function autoResize(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
+        function closeAISidebar() {
+            const sidebar = document.getElementById('aiSidebar');
+            const overlay = document.getElementById('fullscreenOverlay');
+
+            sidebar.classList.remove('show');
+            aiSidebarOpen = false;
+
+            if (apiSettingsOpen) {
+                closeAPISettings();
+            }
+
+            // 退出全屏模式
+            if (isFullscreen) {
+                isFullscreen = false;
+                overlay.classList.remove('show');
+                sidebar.classList.remove('fullscreen');
+                const fullscreenBtn = document.getElementById('fullscreenBtn');
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = '全屏';
+            }
+
+            // 取消当前流式请求
+            if (currentController) {
+                currentController.abort();
+            }
         }
 
-        document.getElementById('aiInput').addEventListener('input', function() {
-            autoResize(this);
+        function handleAIKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendAIMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function sendQuickReply(message) {
+            const input = document.getElementById('aiInput');
+            input.value = message;
+            // 确保输入框高度正确调整
+            autoResize(input);
+            sendAIMessage();
+        }
+
+        async function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+
+            if (!message || isStreaming) return;
+
+            // 检查API配置
+            if (!aiConfig.apiKey) {
+                showNotification('请先配置API Key', 'error');
+                toggleAPISettings();
+                return;
+            }
+
+            // 添加用户消息
+            addAIMessage(message, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+
+            // 设置发送状态
+            isStreaming = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            updateAIStatus();
+
+            try {
+                await streamAIResponse(message);
+            } catch (error) {
+                console.error('AI请求失败:', error);
+                addErrorMessage(error.message);
+            } finally {
+                // 恢复发送状态
+                isStreaming = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                updateAIStatus();
+            }
+        }
+
+        async function streamAIResponse(userMessage) {
+            const chatArea = document.getElementById('aiChatArea');
+
+            // 创建AI消息容器
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            messageDiv.innerHTML = `
+                        <div class="message-avatar ai">🐷</div>
+                        <div>
+                            <div class="message-content ai" id="streamingMessage"></div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const streamingMessageEl = document.getElementById('streamingMessage');
+            let fullResponse = '';
+
+            try {
+                // 创建AbortController用于取消请求
+                currentController = new AbortController();
+
+                const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${aiConfig.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: '-',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+                            },
+                            {
+                                role: 'user',
+                                content: userMessage
+                            }
+                        ],
+                        max_tokens: aiConfig.maxTokens,
+                        temperature: aiConfig.temperature,
+                        stream: true
+                    }),
+                    signal: currentController.signal
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') {
+                                break;
+                            }
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const content = parsed.choices?.[0]?.delta?.content;
+
+                                if (content) {
+                                    fullResponse += content;
+                                    streamingMessageEl.innerHTML = formatMessage(fullResponse);
+                                    chatArea.scrollTop = chatArea.scrollHeight;
+                                }
+                            } catch (e) {
+                                // 忽略解析错误，继续处理下一行
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                // 移除临时ID
+                streamingMessageEl.removeAttribute('id');
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    streamingMessageEl.innerHTML = '<em style="color: #6b7280;">对话已取消</em>';
+                } else {
+                    // 移除失败的消息
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                    throw error;
+                }
+            } finally {
+                currentController = null;
+            }
+        }
+
+        function formatMessage(text) {
+            // 简单的文本格式化
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function addAIMessage(message, sender) {
+            const chatArea = document.getElementById('aiChatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message' + (sender === 'user' ? ' user' : '');
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                            <div class="message-avatar user">👤</div>
+                            <div>
+                                <div class="message-content user">${message}</div>
+                                <div class="message-time">${timeStr}</div>
+                            </div>
+                        `;
+            } else {
+                messageDiv.innerHTML = `
+                            <div class="message-avatar ai">🐷</div>
+                            <div>
+                                <div class="message-content ai">${formatMessage(message)}</div>
+                                <div class="message-time">${timeStr}</div>
+                            </div>
+                        `;
+            }
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addErrorMessage(errorMessage) {
+            const chatArea = document.getElementById('aiChatArea');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>连接失败：</strong>${errorMessage}
+                        <br><small>请检查API配置或网络连接</small>
+                    `;
+
+            chatArea.appendChild(errorDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function renderSystems(filteredSystems = null) {
+            const systemsGrid = document.getElementById('systemsGrid');
+            const systemsToRender = filteredSystems || systems;
+
+            systemsGrid.innerHTML = '';
+
+            if (systemsToRender.length === 0) {
+                document.getElementById('noResults').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('noResults').style.display = 'none';
+            }
+
+            systemsToRender.forEach(system => {
+                const systemCard = document.createElement('div');
+                systemCard.className = 'system-card';
+                systemCard.onclick = () => openSystem(system);
+
+                systemCard.innerHTML = `
+                            <button class="favorite-btn ${system.favorited ? 'favorited' : ''}"
+                                    onclick="event.stopPropagation(); toggleFavorite(${system.id})">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <div class="system-content">
+                                <div class="system-icon">
+                                    <i class="${system.icon}"></i>
+                                </div>
+                                <h3 class="system-title">${system.name}</h3>
+                                <p class="system-desc">${system.description}</p>
+                                <div class="system-status">
+                                    <i class="fas fa-circle"></i>
+                                    <span>${system.status}</span>
+                                </div>
+                            </div>
+                        `;
+
+                systemsGrid.appendChild(systemCard);
+            });
+        }
+
+        function filterSystems() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!searchQuery) {
+                renderSystems();
+                return;
+            }
+
+            const filteredSystems = systems.filter(system =>
+                system.name.toLowerCase().includes(searchQuery) ||
+                system.description.toLowerCase().includes(searchQuery)
+            );
+
+            renderSystems(filteredSystems);
+        }
+
+        function toggleFavorite(systemId) {
+            const system = systems.find(s => s.id === systemId);
+            if (system) {
+                system.favorited = !system.favorited;
+                updateFavorites();
+                renderSystems();
+            }
+        }
+
+        function updateFavorites() {
+            const favorites = systems.filter(s => s.favorited).map(s => s.id);
+            console.log('收藏列表更新:', favorites);
+        }
+
+        function openSystem(system) {
+            recordAccess(system);
+
+            if (system.url && system.url !== '#') {
+                window.open(system.url, '_blank');
+            } else {
+                alert(`即将打开 ${system.name}`);
+            }
+        }
+
+        function recordAccess(system) {
+            const accessLog = {
+                systemId: system.id,
+                systemName: system.name,
+                timestamp: new Date(),
+                userAgent: navigator.userAgent
+            };
+
+            console.log('访问记录:', accessLog);
+
+            const todayVisitsEl = document.getElementById('todayVisits');
+            const totalVisitsEl = document.getElementById('totalVisits');
+
+            todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+            totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const systemsContainer = document.getElementById('systemsContainer');
+            const gridBtn = document.getElementById('gridBtn');
+            const listBtn = document.getElementById('listBtn');
+
+            if (mode === 'list') {
+                systemsContainer.classList.add('list-view');
+                gridBtn.classList.remove('active');
+                listBtn.classList.add('active');
+            } else {
+                systemsContainer.classList.remove('list-view');
+                gridBtn.classList.add('active');
+                listBtn.classList.remove('active');
+            }
+        }
+
+
+        function startStatsUpdate() {
+            statsTimer = setInterval(() => {
+                const onlineUsersEl = document.getElementById('onlineUsers');
+                const todayVisitsEl = document.getElementById('todayVisits');
+                const totalVisitsEl = document.getElementById('totalVisits');
+
+                const currentUsers = parseInt(onlineUsersEl.textContent);
+                const change = Math.floor(Math.random() * 10) - 5;
+                onlineUsersEl.textContent = Math.max(100, currentUsers + change);
+
+                if (Math.random() > 0.7) {
+                    todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+                    totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+                }
+
+            }, 10000);
+        }
+
+        // 页面卸载时清理定时器和请求
+        window.addEventListener('beforeunload', function () {
+            if (statsTimer) {
+                clearInterval(statsTimer);
+            }
+            if (currentController) {
+                currentController.abort();
+            }
         });
 
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
+        function filterSystems() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
 
-            document.body.appendChild(notification);
+            if (!searchQuery) {
+                renderSystems();
+                return;
+            }
 
-            // 3秒后自动移除
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease forwards';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
+            const filteredSystems = systems.filter(system =>
+                system.name.toLowerCase().includes(searchQuery) ||
+                system.description.toLowerCase().includes(searchQuery)
+            );
+
+            renderSystems(filteredSystems);
         }
+
+        function toggleFavorite(systemId) {
+            const system = systems.find(s => s.id === systemId);
+            if (system) {
+                system.favorited = !system.favorited;
+                updateFavorites();
+                renderSystems();
+            }
+        }
+
+        function updateFavorites() {
+            const favorites = systems.filter(s => s.favorited).map(s => s.id);
+            console.log('收藏列表更新:', favorites);
+        }
+
+        function openSystem(system) {
+            recordAccess(system);
+
+            if (system.url && system.url !== '#') {
+                window.open(system.url, '_blank');
+            } else {
+                alert(`即将打开 ${system.name}`);
+            }
+        }
+
+        function recordAccess(system) {
+            const accessLog = {
+                systemId: system.id,
+                systemName: system.name,
+                timestamp: new Date(),
+                userAgent: navigator.userAgent
+            };
+
+            console.log('访问记录:', accessLog);
+
+            const todayVisitsEl = document.getElementById('todayVisits');
+            const totalVisitsEl = document.getElementById('totalVisits');
+
+            todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+            totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const systemsContainer = document.getElementById('systemsContainer');
+            const gridBtn = document.getElementById('gridBtn');
+            const listBtn = document.getElementById('listBtn');
+
+            if (mode === 'list') {
+                systemsContainer.classList.add('list-view');
+                gridBtn.classList.remove('active');
+                listBtn.classList.add('active');
+            } else {
+                systemsContainer.classList.remove('list-view');
+                gridBtn.classList.add('active');
+                listBtn.classList.remove('active');
+            }
+        }
+
+        function startStatsUpdate() {
+            statsTimer = setInterval(() => {
+                const onlineUsersEl = document.getElementById('onlineUsers');
+                const todayVisitsEl = document.getElementById('todayVisits');
+                const totalVisitsEl = document.getElementById('totalVisits');
+
+                const currentUsers = parseInt(onlineUsersEl.textContent);
+                const change = Math.floor(Math.random() * 10) - 5;
+                onlineUsersEl.textContent = Math.max(100, currentUsers + change);
+
+                if (Math.random() > 0.7) {
+                    todayVisitsEl.textContent = parseInt(todayVisitsEl.textContent) + 1;
+                    totalVisitsEl.textContent = parseInt(totalVisitsEl.textContent) + 1;
+                }
+
+            }, 10000);
+        }
+
+        // 页面卸载时清理定时器和请求
+        window.addEventListener('beforeunload', function () {
+            if (statsTimer) {
+                clearInterval(statsTimer);
+            }
+            if (currentController) {
+                currentController.abort();
+            }
+        });
     </script>
 </body>
-</html>
