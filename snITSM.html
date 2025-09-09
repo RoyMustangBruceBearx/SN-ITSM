@@ -901,12 +901,21 @@
 
         // iframe加载处理函数
         function handleIframeLoad(iframe) {
-            console.log('AI界面加载成功');
-            // 可以在这里添加额外的初始化逻辑
+            console.log('AI模块加载成功');
+            
+            // 设置iframe的初始状态
+            setTimeout(() => {
+                if (iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        type: 'switchMode',
+                        mode: isFullscreen ? 'fullscreen' : 'embedded'
+                    }, '*');
+                }
+            }, 100);
         }
 
         function handleIframeError(iframe) {
-            console.error('AI界面加载失败');
+            console.error('AI模块加载失败');
             // 显示错误信息并提供备用方案
             const container = iframe.parentElement;
             container.innerHTML = `
@@ -915,7 +924,7 @@
                         <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);">🐷</div>
                         <div>
                             <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
-                            <div style="font-size: 12px; color: #ef4444; margin-top: 2px;">加载失败</div>
+                            <div style="font-size: 12px; color: #ef4444; margin-top: 2px;">模块加载失败</div>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -929,15 +938,24 @@
                 </div>
                 <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px; text-align: center; color: #6b7280;">
                     <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px; color: #ef4444;"></i>
-                    <h3 style="margin-bottom: 10px; color: #1f2937;">AI界面加载失败</h3>
-                    <p style="margin-bottom: 20px;">无法加载ai-view.html文件，请检查文件是否存在于同一目录下。</p>
-                    <button onclick="openAIWindow()" style="padding: 10px 20px; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; margin-bottom: 10px;">
-                        <i class="fas fa-external-link-alt"></i> 打开独立窗口
-                    </button>
-                    <br>
-                    <button onclick="location.reload()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;">
-                        <i class="fas fa-redo"></i> 刷新页面重试
-                    </button>
+                    <h3 style="margin-bottom: 15px; color: #1f2937;">AI模块加载失败</h3>
+                    <p style="margin-bottom: 20px; line-height: 1.5;">无法加载AI聊天模块，可能的原因：<br>
+                    • ai-view.html文件不存在<br>
+                    • 文件路径不正确<br>
+                    • 浏览器安全限制</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 200px;">
+                        <button onclick="openAIWindow()" style="padding: 12px 20px; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">
+                            <i class="fas fa-external-link-alt"></i> 独立窗口
+                        </button>
+                        <button onclick="location.reload()" style="padding: 12px 20px; background: #6b7280; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">
+                            <i class="fas fa-redo"></i> 重新加载
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; font-size: 12px; color: #1e40af;">
+                        <strong>建议：</strong>确保ai-view.html文件与此页面在同一目录，或使用本地服务器运行
+                    </div>
                 </div>
             `;
         }
