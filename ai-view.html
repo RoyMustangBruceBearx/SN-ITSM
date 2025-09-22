@@ -334,6 +334,58 @@
             pointer-events: auto;
         }
 
+        .api-settings h4 {
+            margin-bottom: 12px;
+            color: #2E3A59;
+            font-size: 16px;
+        }
+
+        .api-settings label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .api-settings input,
+        .api-settings select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+        }
+
+        .api-settings input:focus,
+        .api-settings select:focus {
+            outline: none;
+            border-color: #FF1493;
+            box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.1);
+        }
+
+        .api-settings button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .api-settings button:hover {
+            background: linear-gradient(135deg, #FF1493, #DC143C);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        }
+
         .settings-btn {
             position: absolute;
             top: 10px;
@@ -351,6 +403,11 @@
             color: #6b7280;
             font-size: 14px;
             z-index: 1001;
+        }
+
+        .settings-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
         }
 
         /* 动画定义 */
@@ -483,7 +540,7 @@
                 this.displayedText = '';
                 this.pendingText = '';
                 this.isTyping = false;
-                this.typeSpeed = 20; // 更快的打字速度
+                this.typeSpeed = 20;
                 this.messageId = this.generateId();
             }
             
@@ -506,7 +563,6 @@
                     return;
                 }
                 
-                // 一次处理多个字符以提高速度
                 const charsToAdd = Math.min(2, this.pendingText.length);
                 const chars = this.pendingText.slice(0, charsToAdd);
                 this.pendingText = this.pendingText.slice(charsToAdd);
@@ -514,7 +570,6 @@
                 this.displayedText += chars;
                 this.messageElement.innerHTML = formatMessage(this.displayedText);
                 
-                // 自动滚动
                 this.scrollToBottom();
                 
                 setTimeout(() => this.typeNextChar(), this.typeSpeed);
@@ -532,11 +587,8 @@
             }
             
             onTypingComplete() {
-                // 添加消息操作按钮
                 this.addMessageActions();
-                // 添加完成指示器
                 this.addCompletionIndicator();
-                // 更新快速回复
                 this.updateQuickReplies();
             }
             
@@ -571,7 +623,6 @@
             }
             
             updateQuickReplies() {
-                // 基于AI回复内容智能更新快速回复选项
                 const content = this.displayedText.toLowerCase();
                 let newReplies = [];
                 
@@ -597,7 +648,6 @@
                         '统计图表说明'
                     ];
                 } else {
-                    // 保持默认快速回复
                     return;
                 }
                 
@@ -607,7 +657,6 @@
             renderQuickReplies(replies) {
                 const container = document.getElementById('quickReplies');
                 if (container) {
-                    // 添加淡出效果
                     container.style.opacity = '0';
                     setTimeout(() => {
                         container.innerHTML = '';
@@ -755,6 +804,17 @@
             temperature: 0.7
         };
 
+        // ===== 安全的字符串编码函数 =====
+        function safeEncodeHeader(value) {
+            // 移除或替换非 ISO-8859-1 字符
+            if (typeof value !== 'string') {
+                value = String(value);
+            }
+            
+            // 只保留 ASCII 字符 (0-127)
+            return value.replace(/[^\x00-\x7F]/g, '');
+        }
+
         // ===== 增强的AI消息发送函数 =====
         async function sendAIMessage() {
             const input = document.getElementById('aiInput');
@@ -770,20 +830,23 @@
                 return;
             }
 
-            // 添加用户消息到上下文
-            conversationContext.addMessage('user', message);
+            // 验证API Key格式
+            const cleanApiKey = safeEncodeHeader(aiConfig.apiKey);
+            if (!cleanApiKey) {
+                showNotification('API Key包含无效字符，请检查配置', 'error');
+                toggleAPISettings();
+                return;
+            }
 
-            // 添加用户消息到界面
+            conversationContext.addMessage('user', message);
             addAIMessage(message, 'user');
             input.value = '';
             input.style.height = 'auto';
 
-            // 设置发送状态
             isStreaming = true;
             sendButton.disabled = true;
             sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            // 显示打字指示器
             const typingIndicator = MessageStatusManager.createTypingIndicator();
             document.getElementById('aiChatArea').appendChild(typingIndicator);
             typingIndicator.scrollIntoView({ behavior: 'smooth' });
@@ -795,7 +858,6 @@
                 MessageStatusManager.removeTypingIndicator();
                 addErrorMessage(error.message);
             } finally {
-                // 恢复发送状态
                 isStreaming = false;
                 sendButton.disabled = false;
                 sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
@@ -803,14 +865,12 @@
             }
         }
 
-        // ===== 增强的流式AI响应函数 =====
+        // ===== 修复后的流式AI响应函数 =====
         async function streamAIResponse() {
             const chatArea = document.getElementById('aiChatArea');
 
-            // 移除打字指示器
             MessageStatusManager.removeTypingIndicator();
 
-            // 创建AI消息容器
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message';
 
@@ -832,33 +892,103 @@
             chatArea.scrollTop = chatArea.scrollHeight;
 
             const streamingMessageEl = document.getElementById('streamingMessage');
-            
-            // 创建增强的流式处理器
             currentStreamHandler = new EnhancedStreamHandler(streamingMessageEl);
 
             try {
-                // 创建AbortController用于取消请求
                 currentController = new AbortController();
+
+                // 安全编码API Key，移除非ASCII字符
+                const safeApiKey = safeEncodeHeader(aiConfig.apiKey);
+                
+                if (!safeApiKey) {
+                    throw new Error('API Key 包含无效字符，请使用纯英文字符的API Key');
+                }
+
+                // 准备请求头
+                const requestHeaders = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+
+                // 添加认证头 - 尝试多种可能的格式
+                if (safeApiKey) {
+                    // 根据API服务器的要求，可能需要不同的认证格式
+                    requestHeaders['Authorization'] = `Bearer ${safeApiKey}`;
+                    // 有些API可能需要其他格式，比如：
+                    // requestHeaders['X-API-Key'] = safeApiKey;
+                    // requestHeaders['API-Key'] = safeApiKey;
+                }
+
+                console.log('发送请求到:', `${aiConfig.baseURL}/chat/completions`);
+                console.log('使用API Key前缀:', safeApiKey.substring(0, 8) + '...');
+
+                const requestBody = {
+                    model: '-',
+                    messages: conversationContext.getContextForAPI(),
+                    max_tokens: aiConfig.maxTokens,
+                    temperature: aiConfig.temperature,
+                    stream: true
+                };
+
+                console.log('请求体:', JSON.stringify(requestBody, null, 2));
 
                 const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${aiConfig.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: '-',
-                        messages: conversationContext.getContextForAPI(),
-                        max_tokens: aiConfig.maxTokens,
-                        temperature: aiConfig.temperature,
-                        stream: true
-                    }),
+                    headers: requestHeaders,
+                    body: JSON.stringify(requestBody),
                     signal: currentController.signal
                 });
 
+                console.log('响应状态:', response.status, response.statusText);
+                console.log('响应头:', Object.fromEntries(response.headers.entries()));
+
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    
+                    // 详细的错误处理
+                    if (response.status === 401) {
+                        errorMessage = '认证失败，请检查以下项目：\n' +
+                                     '1. API Key 是否正确\n' +
+                                     '2. API Key 是否有效且未过期\n' +
+                                     '3. API Key 格式是否正确\n' +
+                                     '4. 服务器地址是否正确';
+                    } else if (response.status === 403) {
+                        errorMessage = '访问被拒绝，API Key 可能没有权限';
+                    } else if (response.status === 404) {
+                        errorMessage = '服务器端点不存在，请检查服务器地址';
+                    } else if (response.status === 500) {
+                        errorMessage = '服务器内部错误，请稍后重试';
+                    }
+                    
+                    try {
+                        const errorData = await response.text();
+                        console.log('错误响应内容:', errorData);
+                        
+                        // 尝试解析JSON错误信息
+                        try {
+                            const errorJson = JSON.parse(errorData);
+                            if (errorJson.error?.message) {
+                                errorMessage += '\n\n服务器消息: ' + errorJson.error.message;
+                            }
+                        } catch (jsonError) {
+                            // 如果不是JSON，显示原始文本
+                            if (errorData.trim()) {
+                                errorMessage += '\n\n服务器响应: ' + errorData.substring(0, 200);
+                            }
+                        }
+                    } catch (textError) {
+                        console.warn('无法读取错误响应:', textError);
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+
+                // 检查响应是否为流式响应
+                const contentType = response.headers.get('content-type');
+                console.log('响应内容类型:', contentType);
+
+                if (!contentType || !contentType.includes('text/plain') && !contentType.includes('application/json')) {
+                    console.warn('意外的响应类型:', contentType);
                 }
 
                 const reader = response.body.getReader();
@@ -870,45 +1000,50 @@
                     if (done) break;
 
                     const chunk = decoder.decode(value);
+                    console.log('收到数据块:', chunk.substring(0, 100) + '...');
+                    
                     const lines = chunk.split('\n');
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
+                            const data = line.slice(6).trim();
                             if (data === '[DONE]') {
+                                console.log('流式响应结束');
                                 break;
                             }
 
-                            try {
-                                const parsed = JSON.parse(data);
-                                const content = parsed.choices?.[0]?.delta?.content;
+                            if (data) {
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices?.[0]?.delta?.content;
 
-                                if (content) {
-                                    fullResponse += content;
-                                    currentStreamHandler.addChunk(content);
+                                    if (content) {
+                                        fullResponse += content;
+                                        currentStreamHandler.addChunk(content);
+                                    }
+                                } catch (parseError) {
+                                    console.warn('解析SSE数据失败:', parseError, '数据:', data);
+                                    continue;
                                 }
-                            } catch (e) {
-                                // 忽略解析错误，继续处理下一行
-                                continue;
                             }
                         }
                     }
                 }
 
-                // 确保打字效果完成
+                if (!fullResponse) {
+                    throw new Error('未收到有效响应内容，请检查API配置');
+                }
+
                 currentStreamHandler.finishTyping();
-
-                // 添加AI消息到上下文
                 conversationContext.addMessage('assistant', fullResponse);
-
-                // 移除临时ID
                 streamingMessageEl.removeAttribute('id');
 
             } catch (error) {
+                console.error('请求详细错误:', error);
+                
                 if (error.name === 'AbortError') {
                     streamingMessageEl.innerHTML = '<em style="color: #6b7280;">对话已取消</em>';
                 } else {
-                    // 移除失败的消息
                     if (messageDiv.parentNode) {
                         messageDiv.parentNode.removeChild(messageDiv);
                     }
@@ -936,10 +1071,6 @@
         function regenerateMessage(messageId) {
             const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
             if (messageElement) {
-                // 获取该消息在对话历史中的位置
-                const messageIndex = Array.from(messageElement.parentNode.children).indexOf(messageElement);
-                
-                // 移除该消息及之后的所有AI消息
                 let current = messageElement.nextElementSibling;
                 while (current) {
                     const next = current.nextElementSibling;
@@ -950,15 +1081,12 @@
                     current = next;
                 }
                 
-                // 移除当前消息
                 messageElement.remove();
                 
-                // 截断上下文历史
                 if (conversationContext.messages.length > 0) {
                     conversationContext.messages = conversationContext.messages.slice(0, -1);
                 }
                 
-                // 重新发送最后一条用户消息
                 const lastUserMessage = conversationContext.messages[conversationContext.messages.length - 1];
                 if (lastUserMessage && lastUserMessage.role === 'user') {
                     sendAIMessageWithContent(lastUserMessage.content);
@@ -972,14 +1100,11 @@
                 likeBtn.style.color = '#10b981';
                 likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i>';
                 showNotification('感谢您的反馈！', 'success');
-                
-                // 这里可以添加发送反馈到服务器的逻辑
                 recordMessageFeedback(messageId, 'like');
             }
         }
 
         function recordMessageFeedback(messageId, type) {
-            // 记录用户反馈，用于改进AI回复质量
             const feedback = {
                 messageId,
                 type,
@@ -987,7 +1112,6 @@
                 userAgent: navigator.userAgent
             };
             
-            // 保存到本地存储
             const existingFeedback = JSON.parse(localStorage.getItem('messageFeedback') || '[]');
             existingFeedback.push(feedback);
             localStorage.setItem('messageFeedback', JSON.stringify(existingFeedback));
@@ -995,21 +1119,15 @@
             console.log('用户反馈已记录:', feedback);
         }
 
-        // ===== 辅助函数：使用指定内容发送消息 =====
         async function sendAIMessageWithContent(content) {
-            // 添加用户消息到上下文
             conversationContext.addMessage('user', content);
-
-            // 添加用户消息到界面
             addAIMessage(content, 'user');
 
-            // 设置发送状态
             isStreaming = true;
             const sendButton = document.getElementById('sendButton');
             sendButton.disabled = true;
             sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-            // 显示打字指示器
             const typingIndicator = MessageStatusManager.createTypingIndicator();
             document.getElementById('aiChatArea').appendChild(typingIndicator);
             typingIndicator.scrollIntoView({ behavior: 'smooth' });
@@ -1021,7 +1139,6 @@
                 MessageStatusManager.removeTypingIndicator();
                 addErrorMessage(error.message);
             } finally {
-                // 恢复发送状态
                 isStreaming = false;
                 sendButton.disabled = false;
                 sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
@@ -1029,7 +1146,6 @@
             }
         }
 
-        // ===== 增强的格式化消息函数 =====
         function formatMessage(text) {
             return text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -1039,7 +1155,6 @@
                 .replace(/\n/g, '<br>');
         }
 
-        // ===== 增强的通知函数 =====
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.style.cssText = `
@@ -1068,7 +1183,6 @@
                 <span>${message}</span>
             `;
 
-            // 添加动画样式
             if (!document.getElementById('notification-style')) {
                 const style = document.createElement('style');
                 style.id = 'notification-style';
@@ -1087,7 +1201,6 @@
 
             document.body.appendChild(notification);
 
-            // 3秒后自动移除
             setTimeout(() => {
                 notification.style.animation = 'slideOutNotification 0.3s ease';
                 setTimeout(() => {
@@ -1098,7 +1211,6 @@
             }, 3000);
         }
 
-        // ===== 其他原有函数保持不变 =====
         function detectEnvironment() {
             try {
                 if (window.self !== window.top) {
@@ -1136,14 +1248,33 @@
         }
 
         function saveAPISettings() {
-            aiConfig.apiKey = document.getElementById('apiKey').value.trim();
+            const rawApiKey = document.getElementById('apiKey').value.trim();
+            
+            // 验证API Key是否包含非ASCII字符
+            const cleanApiKey = safeEncodeHeader(rawApiKey);
+            if (rawApiKey && !cleanApiKey) {
+                showNotification('API Key包含无效字符，请使用纯英文字符', 'error');
+                return;
+            }
+            
+            // 验证API Key格式（基本验证）
+            if (cleanApiKey && cleanApiKey.length < 10) {
+                showNotification('API Key长度过短，请检查是否完整', 'warning');
+            }
+            
+            aiConfig.apiKey = cleanApiKey;
             aiConfig.model = document.getElementById('modelSelect').value;
             aiConfig.maxTokens = parseInt(document.getElementById('maxTokens').value);
             aiConfig.temperature = parseFloat(document.getElementById('temperature').value);
 
             localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
             closeAPISettings();
-            showNotification('API设置已保存！', 'success');
+            
+            if (cleanApiKey) {
+                showNotification('API设置已保存！可以开始对话了', 'success');
+            } else {
+                showNotification('API设置已保存，但需要配置有效的API Key', 'warning');
+            }
         }
 
         function loadAPISettings() {
@@ -1227,16 +1358,13 @@
         }
 
         function retryLastMessage() {
-            // 移除错误消息
             const errorMessage = document.querySelector('.error-message-container');
             if (errorMessage) {
                 errorMessage.remove();
             }
 
-            // 重新发送最后一条用户消息
             const lastUserMessage = conversationContext.messages[conversationContext.messages.length - 1];
             if (lastUserMessage && lastUserMessage.role === 'user') {
-                // 移除最后一条用户消息，让它重新发送
                 conversationContext.messages.pop();
                 sendAIMessageWithContent(lastUserMessage.content);
             }
@@ -1247,7 +1375,6 @@
             detectEnvironment();
             loadAPISettings();
 
-            // 点击外部关闭API设置
             document.addEventListener('click', function (e) {
                 const apiSettings = document.getElementById('apiSettings');
                 const settingsBtn = document.querySelector('.settings-btn');
@@ -1256,7 +1383,6 @@
                 }
             });
 
-            // 自动聚焦输入框
             const input = document.getElementById('aiInput');
             if (input) {
                 setTimeout(() => {
@@ -1265,9 +1391,7 @@
                 }, 100);
             }
 
-            // 添加快捷键支持
             document.addEventListener('keydown', function(e) {
-                // Ctrl+K 聚焦输入框
                 if (e.ctrlKey && e.key === 'k') {
                     e.preventDefault();
                     const input = document.getElementById('aiInput');
@@ -1277,7 +1401,6 @@
                     }
                 }
                 
-                // Escape 取消当前操作
                 if (e.key === 'Escape') {
                     if (isStreaming && currentController) {
                         currentController.abort();
@@ -1291,14 +1414,12 @@
             console.log('AI对话体验优化已加载');
         });
 
-        // 页面卸载时清理请求
         window.addEventListener('beforeunload', function () {
             if (currentController) {
                 currentController.abort();
             }
         });
 
-        // 监听父窗口的消息（用于模式切换等通信）
         window.addEventListener('message', function(event) {
             if (event.data.type === 'switchMode') {
                 if (event.data.mode === 'fullscreen') {
