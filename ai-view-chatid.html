@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能助手 - 优化版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: transparent;
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-chat-module {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+        }
+
+        .ai-chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: transparent;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            animation: messageSlide 0.3s ease;
+            position: relative;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .message-avatar.ai {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .message-avatar.user {
+            background: linear-gradient(135deg, #4A90E2, #2563eb);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 280px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message-content.ai {
+            background: rgba(249, 250, 251, 0.8);
+            color: #374151;
+            border-top-left-radius: 6px;
+        }
+
+        .message-content.user {
+            background: linear-gradient(135deg, #4A90E2, #2563eb);
+            color: white;
+            border-top-right-radius: 6px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .message-actions {
+            display: none;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            gap: 4px;
+        }
+
+        .chat-message:hover .message-actions {
+            display: flex;
+        }
+
+        .action-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(249, 250, 251, 0.8);
+            border-radius: 18px;
+            border-top-left-radius: 6px;
+            max-width: 280px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typingDot 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .typing-text {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .message-complete {
+            color: #10b981;
+            font-size: 12px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .message-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 10px 0;
+            max-width: 280px;
+        }
+
+        .error-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #dc2626;
+        }
+
+        .retry-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.2s ease;
+        }
+
+        .retry-btn:hover {
+            background: #b91c1c;
+        }
+
+        .ai-input-area {
+            padding: 16px 20px 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-reply {
+            padding: 6px 12px;
+            background: rgba(255, 20, 147, 0.1);
+            border: 1px solid rgba(255, 20, 147, 0.2);
+            border-radius: 16px;
+            font-size: 12px;
+            color: #FF1493;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: quickReplySlide 0.3s ease forwards;
+        }
+
+        .quick-reply:nth-child(1) { animation-delay: 0.1s; }
+        .quick-reply:nth-child(2) { animation-delay: 0.2s; }
+        .quick-reply:nth-child(3) { animation-delay: 0.3s; }
+        .quick-reply:nth-child(4) { animation-delay: 0.4s; }
+
+        .quick-reply:hover {
+            background: rgba(255, 20, 147, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .ai-input {
+            flex: 1;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 10px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .ai-input:focus {
+            border-color: #FF1493;
+            box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 16px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-settings {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            width: 280px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1002;
+            transform: scale(0.95) translateY(-10px);
+            opacity: 0;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .api-settings.show {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .api-settings h4 {
+            margin-bottom: 12px;
+            color: #2E3A59;
+            font-size: 16px;
+        }
+
+        .api-settings label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .api-settings input,
+        .api-settings select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+        }
+
+        .api-settings input:focus,
+        .api-settings select:focus {
+            outline: none;
+            border-color: #FF1493;
+            box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.1);
+        }
+
+        .api-settings button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .api-settings button:hover {
+            background: linear-gradient(135deg, #FF1493, #DC143C);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-size: 14px;
+            z-index: 1001;
+        }
+
+        .settings-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+        /* 新增：聊天状态栏 */
+        .chat-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .chat-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-action-btn {
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6b7280;
+        }
+
+        .chat-action-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+        /* 动画定义 */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes quickReplySlide {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+            30% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 400px) {
+            .ai-chat-area {
+                padding: 15px;
+            }
+
+            .ai-input-area {
+                padding: 16px 15px 20px;
+            }
+
+            .message-content {
+                max-width: 240px;
+            }
+
+            .api-settings {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body class="embedded">
+    <!-- API设置按钮 -->
+    <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- API设置面板 -->
+    <div class="api-settings" id="apiSettings">
+        <h4>OpenWebUI 配置</h4>
+        
+        <label for="baseURL">服务器地址</label>
+        <input type="text" id="baseURL" placeholder="http://your-openwebui-host:3000" value="http://3.0.76.119:3000">
+
+        <label for="apiKey">API Key</label>
+        <input type="password" id="apiKey" placeholder="请输入您的API Key">
+
+        <label for="modelSelect">模型选择</label>
+        <select id="modelSelect">
+            <option value="-pr-modified">问答助手盲测第四版本</option>
+            <option value="-">问答助手盲测第三版本</option>
+        </select>
+
+        <label for="maxTokens">最大令牌数</label>
+        <input type="number" id="maxTokens" value="2000" min="100" max="4000">
+
+        <label for="temperature">创造性 (0-1)</label>
+        <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+
+        <button onclick="saveAPISettings()">保存设置</button>
+    </div>
+
+    <div class="ai-chat-module">
+        <!-- 聊天状态栏 -->
+        <div class="chat-status">
+            <div class="chat-info">
+                <span>聊天ID: <span id="chatId">未创建</span></span>
+                <span>•</span>
+                <span>消息数: <span id="messageCount">0</span></span>
+                <span>•</span>
+                <span id="connectionStatus">未连接</span>
+            </div>
+            <div class="chat-actions">
+                <button class="chat-action-btn" onclick="startNewChat()" title="新建聊天">
+                    <i class="fas fa-plus"></i> 新聊天
+                </button>
+                <button class="chat-action-btn" onclick="exportChat()" title="导出聊天">
+                    <i class="fas fa-download"></i> 导出
+                </button>
+            </div>
+        </div>
+
+        <div class="ai-chat-area" id="aiChatArea">
+            <div class="chat-message">
+                <div class="message-avatar ai">🐷</div>
+                <div>
+                    <div class="message-content ai">
+                        您好！我是神农晓问，您的专属智能农牧助手！🐷✨<br><br>
+                        请先在设置中配置OpenWebUI服务器地址和API Key，然后我就能为您提供专业的农牧业咨询服务了！
+                    </div>
+                    <div class="message-time">刚刚</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-input-area">
+            <div class="quick-replies" id="quickReplies">
+                <div class="quick-reply" onclick="sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
+                <div class="quick-reply" onclick="sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
+                <div class="quick-reply" onclick="sendQuickReply('如何进行数据分析？')">数据分析</div>
+                <div class="quick-reply" onclick="sendQuickReply('系统操作帮助')">系统帮助</div>
+            </div>
+            <div class="input-container">
+                <textarea class="ai-input"
+                          id="aiInput"
+                          placeholder="输入您的问题..."
+                          rows="1"
+                          onkeypress="handleAIKeyPress(event)"
+                          oninput="autoResize(this)"></textarea>
+                <button class="send-button" id="sendButton" onclick="sendAIMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 优化后的聊天会话管理器 =====
+        class OptimizedChatSession {
+            constructor() {
+                this.chatId = null;
+                this.messageCount = 0;
+                this.isActive = false;
+                this.sessionStartTime = null;
+            }
+            
+            async createNewChat() {
+                try {
+                    console.log('创建新聊天会话...');
+                    
+                    // 生成新的chatId
+                    this.chatId = this.generateChatId();
+                    this.messageCount = 0;
+                    this.isActive = true;
+                    this.sessionStartTime = new Date();
+                    
+                    // 更新UI显示
+                    this.updateChatStatus();
+                    
+                    console.log('新聊天会话已创建:', this.chatId);
+                    return this.chatId;
+                    
+                } catch (error) {
+                    console.error('创建聊天会话失败:', error);
+                    throw error;
+                }
+            }
+            
+            generateChatId() {
+                // 生成符合OpenWebUI规范的chatId
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substr(2, 9);
+                return `chat_${timestamp}_${random}`;
+            }
+            
+            updateChatStatus() {
+                const chatIdEl = document.getElementById('chatId');
+                const messageCountEl = document.getElementById('messageCount');
+                const connectionStatusEl = document.getElementById('connectionStatus');
+                
+                if (chatIdEl) {
+                    chatIdEl.textContent = this.chatId || '未创建';
+                }
+                
+                if (messageCountEl) {
+                    messageCountEl.textContent = this.messageCount;
+                }
+                
+                if (connectionStatusEl) {
+                    connectionStatusEl.textContent = this.isActive ? '已连接' : '未连接';
+                    connectionStatusEl.style.color = this.isActive ? '#10b981' : '#ef4444';
+                }
+            }
+            
+            incrementMessageCount() {
+                this.messageCount++;
+                this.updateChatStatus();
+            }
+            
+            reset() {
+                this.chatId = null;
+                this.messageCount = 0;
+                this.isActive = false;
+                this.sessionStartTime = null;
+                this.updateChatStatus();
+            }
+            
+            exportSession() {
+                return {
+                    chatId: this.chatId,
+                    messageCount: this.messageCount,
+                    sessionStartTime: this.sessionStartTime,
+                    exportTime: new Date()
+                };
+            }
+        }
+
+        // ===== 优化后的流式响应处理器 =====
+        class OptimizedStreamHandler {
+            constructor(messageElement) {
+                this.messageElement = messageElement;
+                this.displayedText = '';
+                this.pendingText = '';
+                this.isTyping = false;
+                this.typeSpeed = 20;
+                this.messageId = this.generateId();
+            }
+            
+            addChunk(chunk) {
+                this.pendingText += chunk;
+                if (!this.isTyping) {
+                    this.startTypingEffect();
+                }
+            }
+            
+            startTypingEffect() {
+                this.isTyping = true;
+                this.typeNextChar();
+            }
+            
+            typeNextChar() {
+                if (this.pendingText.length === 0) {
+                    this.isTyping = false;
+                    this.onTypingComplete();
+                    return;
+                }
+                
+                const charsToAdd = Math.min(2, this.pendingText.length);
+                const chars = this.pendingText.slice(0, charsToAdd);
+                this.pendingText = this.pendingText.slice(charsToAdd);
+                
+                this.displayedText += chars;
+                this.messageElement.innerHTML = formatMessage(this.displayedText);
+                
+                this.scrollToBottom();
+                
+                setTimeout(() => this.typeNextChar(), this.typeSpeed);
+            }
+            
+            finishTyping() {
+                if (this.pendingText.length > 0) {
+                    this.displayedText += this.pendingText;
+                    this.pendingText = '';
+                    this.messageElement.innerHTML = formatMessage(this.displayedText);
+                    this.scrollToBottom();
+                }
+                this.isTyping = false;
+                this.onTypingComplete();
+            }
+            
+            onTypingComplete() {
+                this.addMessageActions();
+                this.addCompletionIndicator();
+                this.updateQuickReplies();
+            }
+            
+            addMessageActions() {
+                const messageContainer = this.messageElement.closest('.chat-message');
+                if (messageContainer && !messageContainer.querySelector('.message-actions')) {
+                    const actions = document.createElement('div');
+                    actions.className = 'message-actions';
+                    actions.innerHTML = `
+                        <button class="action-btn" title="复制消息" onclick="copyMessage('${this.messageId}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="action-btn" title="重新生成" onclick="regenerateMessage('${this.messageId}')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="action-btn" title="点赞" onclick="likeMessage('${this.messageId}')">
+                            <i class="fas fa-thumbs-up"></i>
+                        </button>
+                    `;
+                    messageContainer.appendChild(actions);
+                    messageContainer.setAttribute('data-message-id', this.messageId);
+                }
+            }
+            
+            addCompletionIndicator() {
+                if (!this.messageElement.querySelector('.message-complete')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'message-complete';
+                    indicator.innerHTML = ' ✓';
+                    this.messageElement.appendChild(indicator);
+                }
+            }
+            
+            updateQuickReplies() {
+                const content = this.displayedText.toLowerCase();
+                let newReplies = [];
+                
+                if (content.includes('生产') || content.includes('管理')) {
+                    newReplies = [
+                        '如何查看生产报表？',
+                        '生产计划怎么制定？',
+                        '如何记录生产数据？',
+                        '异常情况如何处理？'
+                    ];
+                } else if (content.includes('养殖') || content.includes('动物')) {
+                    newReplies = [
+                        '如何监控动物健康？',
+                        '环境参数设置指南',
+                        '饲料配比建议',
+                        '疫苗接种提醒'
+                    ];
+                } else if (content.includes('数据') || content.includes('分析')) {
+                    newReplies = [
+                        '如何导出数据？',
+                        '报表生成步骤',
+                        '数据异常处理',
+                        '统计图表说明'
+                    ];
+                } else {
+                    return;
+                }
+                
+                this.renderQuickReplies(newReplies);
+            }
+            
+            renderQuickReplies(replies) {
+                const container = document.getElementById('quickReplies');
+                if (container) {
+                    container.style.opacity = '0';
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                        replies.forEach((reply, index) => {
+                            const button = document.createElement('div');
+                            button.className = 'quick-reply';
+                            button.textContent = reply;
+                            button.style.animationDelay = `${index * 0.1}s`;
+                            button.onclick = () => sendQuickReply(reply);
+                            container.appendChild(button);
+                        });
+                        container.style.opacity = '1';
+                    }, 200);
+                }
+            }
+            
+            scrollToBottom() {
+                const chatArea = document.getElementById('aiChatArea');
+                if (chatArea) {
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }
+            }
+            
+            generateId() {
+                return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        // ===== 消息状态管理器 =====
+        class MessageStatusManager {
+            static createTypingIndicator() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message typing-message';
+                messageDiv.innerHTML = `
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="typing-indicator">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span class="typing-text">神农晓问正在思考...</span>
+                        </div>
+                    </div>
+                `;
+                return messageDiv;
+            }
+            
+            static removeTypingIndicator() {
+                const typingMessage = document.querySelector('.typing-message');
+                if (typingMessage) {
+                    typingMessage.remove();
+                }
+            }
+            
+            static createErrorMessage(errorMessage, retryCallback) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message error-message-container';
+                messageDiv.innerHTML = `
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="message-error">
+                            <div class="error-content">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>${errorMessage}</span>
+                                <button class="retry-btn" onclick="${retryCallback}">
+                                    <i class="fas fa-redo"></i> 重试
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return messageDiv;
+            }
+        }
+
+        // ===== 全局变量和初始化 =====
+        let apiSettingsOpen = false;
+        let isStreaming = false;
+        let currentController = null;
+        let currentStreamHandler = null;
+        let chatSession = new OptimizedChatSession();
+
+        // AI配置 - 适配OpenWebUI
+        let aiConfig = {
+            baseURL: 'http://3.0.76.119:3000',
+            apiKey: '',
+            model: '-',
+            maxTokens: 2000,
+            temperature: 0.7
+        };
+
+        // ===== 安全的字符串编码函数 =====
+        function safeEncodeHeader(value) {
+            if (typeof value !== 'string') {
+                value = String(value);
+            }
+            return value.replace(/[^\x00-\x7F]/g, '');
+        }
+
+        // ===== 优化后的AI消息发送函数 =====
+        async function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+
+            if (!message || isStreaming) return;
+
+            // 检查API配置
+            if (!aiConfig.apiKey || !aiConfig.baseURL) {
+                showNotification('请先配置OpenWebUI服务器地址和API Key', 'error');
+                toggleAPISettings();
+                return;
+            }
+
+            // 如果没有活跃聊天会话，创建新的
+            if (!chatSession.isActive) {
+                await chatSession.createNewChat();
+            }
+
+            addAIMessage(message, 'user');
+            chatSession.incrementMessageCount();
+            
+            input.value = '';
+            input.style.height = 'auto';
+
+            isStreaming = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const typingIndicator = MessageStatusManager.createTypingIndicator();
+            document.getElementById('aiChatArea').appendChild(typingIndicator);
+            typingIndicator.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                await streamAIResponseOptimized(message);
+            } catch (error) {
+                console.error('AI请求失败:', error);
+                MessageStatusManager.removeTypingIndicator();
+                addErrorMessage(error.message);
+            } finally {
+                isStreaming = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                MessageStatusManager.removeTypingIndicator();
+            }
+        }
+
+        // ===== 优化后的流式AI响应函数（使用ChatID） =====
+        async function streamAIResponseOptimized(userMessage) {
+            const chatArea = document.getElementById('aiChatArea');
+
+            MessageStatusManager.removeTypingIndicator();
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar ai">🐷</div>
+                <div>
+                    <div class="message-content ai" id="streamingMessage"></div>
+                    <div class="message-time">${timeStr}</div>
+                </div>
+            `;
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const streamingMessageEl = document.getElementById('streamingMessage');
+            currentStreamHandler = new OptimizedStreamHandler(streamingMessageEl);
+
+            try {
+                currentController = new AbortController();
+
+                const safeApiKey = safeEncodeHeader(aiConfig.apiKey);
+                
+                if (!safeApiKey) {
+                    throw new Error('API Key 包含无效字符，请使用纯英文字符的API Key');
+                }
+
+                // 优化后的请求头 - 适配OpenWebUI
+                const requestHeaders = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream',
+                    'Authorization': `Bearer ${safeApiKey}`
+                };
+
+                console.log('发送请求到:', `${aiConfig.baseURL}/api/chat/completions`);
+                console.log('使用聊天ID:', chatSession.chatId);
+
+                // 优化后的请求体 - 简化上下文管理，使用chatId
+                const requestBody = {
+                    model: aiConfig.model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+                        },
+                        {
+                            role: 'user',
+                            content: userMessage
+                        }
+                    ],
+                    max_tokens: aiConfig.maxTokens,
+                    temperature: aiConfig.temperature,
+                    stream: true,
+                    // 关键优化：使用chatId进行上下文管理
+                    // chat_id: chatSession.chatId,
+                    // OpenWebUI特有参数
+                    // metadata: {
+                    //     chat_id: chatSession.chatId,
+                    //     timestamp: new Date().toISOString(),
+                    //     client: 'shengnong_portal'
+                    // }
+                };
+
+                console.log('请求体:', JSON.stringify(requestBody, null, 2));
+
+                const response = await fetch(`${aiConfig.baseURL}/api/chat/completions`, {
+                    method: 'POST',
+                    headers: requestHeaders,
+                    body: JSON.stringify(requestBody),
+                    signal: currentController.signal
+                });
+
+                console.log('响应状态:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    
+                    if (response.status === 401) {
+                        errorMessage = 'OpenWebUI认证失败，请检查：\n' +
+                                     '• API Key 是否正确\n' +
+                                     '• 服务器地址是否正确\n' +
+                                     '• OpenWebUI服务是否正常运行';
+                    } else if (response.status === 404) {
+                        errorMessage = 'OpenWebUI端点不存在，请检查：\n' +
+                                     '• 服务器地址格式是否正确\n' +
+                                     '• API路径是否正确\n' +
+                                     '• OpenWebUI版本是否支持此API';
+                    }
+                    
+                    try {
+                        const errorData = await response.text();
+                        console.log('错误响应内容:', errorData);
+                        
+                        try {
+                            const errorJson = JSON.parse(errorData);
+                            if (errorJson.error?.message) {
+                                errorMessage += '\n\n服务器消息: ' + errorJson.error.message;
+                            }
+                        } catch (jsonError) {
+                            if (errorData.trim()) {
+                                errorMessage += '\n\n服务器响应: ' + errorData.substring(0, 200);
+                            }
+                        }
+                    } catch (textError) {
+                        console.warn('无法读取错误响应:', textError);
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    console.log('收到数据块:', chunk.substring(0, 100) + '...');
+                    
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6).trim();
+                            if (data === '[DONE]') {
+                                console.log('流式响应结束');
+                                break;
+                            }
+
+                            if (data) {
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices?.[0]?.delta?.content;
+
+                                    if (content) {
+                                        fullResponse += content;
+                                        currentStreamHandler.addChunk(content);
+                                    }
+
+                                    // 检查是否有chatId返回（OpenWebUI可能会返回）
+                                    if (parsed.chat_id && parsed.chat_id !== chatSession.chatId) {
+                                        console.log('更新chatId:', parsed.chat_id);
+                                        chatSession.chatId = parsed.chat_id;
+                                        chatSession.updateChatStatus();
+                                    }
+                                } catch (parseError) {
+                                    console.warn('解析SSE数据失败:', parseError, '数据:', data);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!fullResponse) {
+                    throw new Error('未收到有效响应内容，请检查OpenWebUI配置');
+                }
+
+                currentStreamHandler.finishTyping();
+                chatSession.incrementMessageCount();
+                streamingMessageEl.removeAttribute('id');
+
+            } catch (error) {
+                console.error('请求详细错误:', error);
+                
+                if (error.name === 'AbortError') {
+                    streamingMessageEl.innerHTML = '<em style="color: #6b7280;">对话已取消</em>';
+                } else {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                    throw error;
+                }
+            } finally {
+                currentController = null;
+                currentStreamHandler = null;
+            }
+        }
+
+        // ===== 聊天会话管理函数 =====
+        function startNewChat() {
+            // 清空当前聊天内容
+            const chatArea = document.getElementById('aiChatArea');
+            chatArea.innerHTML = `
+                <div class="chat-message">
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="message-content ai">
+                            您好！我是神农晓问，您的专属智能农牧助手！🐷✨<br><br>
+                            这是一个新的聊天会话，请告诉我您需要什么帮助？
+                        </div>
+                        <div class="message-time">刚刚</div>
+                    </div>
+                </div>
+            `;
+            
+            // 重置聊天会话
+            chatSession.reset();
+            
+            // 重置快捷回复
+            const quickReplies = document.getElementById('quickReplies');
+            quickReplies.innerHTML = `
+                <div class="quick-reply" onclick="sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
+                <div class="quick-reply" onclick="sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
+                <div class="quick-reply" onclick="sendQuickReply('如何进行数据分析？')">数据分析</div>
+                <div class="quick-reply" onclick="sendQuickReply('系统操作帮助')">系统帮助</div>
+            `;
+            
+            showNotification('新聊天会话已创建', 'success');
+        }
+
+        function exportChat() {
+            if (!chatSession.chatId) {
+                showNotification('暂无聊天内容可导出', 'warning');
+                return;
+            }
+
+            const chatMessages = Array.from(document.querySelectorAll('.chat-message:not(.error-message-container)')).map(msg => {
+                const isUser = msg.classList.contains('user');
+                const content = msg.querySelector('.message-content').textContent;
+                const time = msg.querySelector('.message-time').textContent;
+                
+                return {
+                    role: isUser ? 'user' : 'assistant',
+                    content: content,
+                    timestamp: time
+                };
+            });
+
+            const exportData = {
+                ...chatSession.exportSession(),
+                messages: chatMessages,
+                config: {
+                    model: aiConfig.model,
+                    baseURL: aiConfig.baseURL
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `神农晓问_聊天记录_${chatSession.chatId}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('聊天记录已导出', 'success');
+        }
+
+        // ===== 消息操作函数 =====
+        function copyMessage(messageId) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"] .message-content`);
+            if (messageElement) {
+                const text = messageElement.textContent || messageElement.innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('消息已复制到剪贴板', 'success');
+                }).catch(() => {
+                    showNotification('复制失败', 'error');
+                });
+            }
+        }
+
+        function regenerateMessage(messageId) {
+            if (!chatSession.isActive) {
+                showNotification('请先开始新的聊天会话', 'warning');
+                return;
+            }
+
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                // 获取用户消息内容
+                let userMessage = '';
+                let current = messageElement.previousElementSibling;
+                while (current && !current.classList.contains('user')) {
+                    current = current.previousElementSibling;
+                }
+                
+                if (current && current.classList.contains('user')) {
+                    userMessage = current.querySelector('.message-content').textContent;
+                }
+
+                // 删除AI回复消息
+                messageElement.remove();
+                
+                // 重新发送请求
+                if (userMessage) {
+                    sendAIMessageWithContent(userMessage);
+                }
+            }
+        }
+
+        function likeMessage(messageId) {
+            const likeBtn = document.querySelector(`[data-message-id="${messageId}"] .action-btn[onclick*="likeMessage"]`);
+            if (likeBtn) {
+                likeBtn.style.color = '#10b981';
+                likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i>';
+                showNotification('感谢您的反馈！', 'success');
+                recordMessageFeedback(messageId, 'like');
+            }
+        }
+
+        function recordMessageFeedback(messageId, type) {
+            const feedback = {
+                messageId,
+                chatId: chatSession.chatId,
+                type,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            
+            const existingFeedback = JSON.parse(localStorage.getItem('messageFeedback') || '[]');
+            existingFeedback.push(feedback);
+            localStorage.setItem('messageFeedback', JSON.stringify(existingFeedback));
+            
+            console.log('用户反馈已记录:', feedback);
+        }
+
+        async function sendAIMessageWithContent(content) {
+            if (!chatSession.isActive) {
+                await chatSession.createNewChat();
+            }
+
+            addAIMessage(content, 'user');
+            chatSession.incrementMessageCount();
+
+            isStreaming = true;
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const typingIndicator = MessageStatusManager.createTypingIndicator();
+            document.getElementById('aiChatArea').appendChild(typingIndicator);
+            typingIndicator.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                await streamAIResponseOptimized(content);
+            } catch (error) {
+                console.error('AI请求失败:', error);
+                MessageStatusManager.removeTypingIndicator();
+                addErrorMessage(error.message);
+            } finally {
+                isStreaming = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                MessageStatusManager.removeTypingIndicator();
+            }
+        }
+
+        function formatMessage(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">$1</code>')
+                .replace(/```([\s\S]*?)```/g, '<pre style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px; margin: 8px 0; overflow-x: auto;"><code>$1</code></pre>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+                color: white;
+                border-radius: 8px;
+                z-index: 10000;
+                animation: slideInNotification 0.3s ease;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                max-width: 300px;
+            `;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                        type === 'error' ? 'fa-times-circle' : 
+                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            
+            notification.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            `;
+
+            if (!document.getElementById('notification-style')) {
+                const style = document.createElement('style');
+                style.id = 'notification-style';
+                style.textContent = `
+                    @keyframes slideInNotification {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOutNotification {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutNotification 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function detectEnvironment() {
+            try {
+                if (window.self !== window.top) {
+                    document.body.classList.add('embedded');
+                    console.log('AI模块运行在iframe中');
+                }
+                
+                if (window.parent && window.parent !== window) {
+                    const parentDoc = window.parent.document;
+                    if (parentDoc.querySelector('.ai-sidebar.fullscreen')) {
+                        document.body.classList.add('fullscreen');
+                        console.log('AI模块运行在全屏模式');
+                    }
+                }
+            } catch (e) {
+                console.log('AI模块运行在独立窗口中');
+            }
+        }
+
+        function toggleAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettingsOpen = !apiSettingsOpen;
+
+            if (apiSettingsOpen) {
+                apiSettings.classList.add('show');
+            } else {
+                apiSettings.classList.remove('show');
+            }
+        }
+
+        function closeAPISettings() {
+            const apiSettings = document.getElementById('apiSettings');
+            apiSettings.classList.remove('show');
+            apiSettingsOpen = false;
+        }
+
+        function saveAPISettings() {
+            const baseURL = document.getElementById('baseURL').value.trim();
+            const rawApiKey = document.getElementById('apiKey').value.trim();
+            
+            // 验证服务器地址
+            if (!baseURL) {
+                showNotification('请输入OpenWebUI服务器地址', 'error');
+                return;
+            }
+
+            // 简单的URL格式验证
+            try {
+                new URL(baseURL);
+            } catch (e) {
+                showNotification('请输入有效的服务器地址格式', 'error');
+                return;
+            }
+            
+            // 验证API Key
+            const cleanApiKey = safeEncodeHeader(rawApiKey);
+            if (rawApiKey && !cleanApiKey) {
+                showNotification('API Key包含无效字符，请使用纯英文字符', 'error');
+                return;
+            }
+            
+            if (cleanApiKey && cleanApiKey.length < 10) {
+                showNotification('API Key长度过短，请检查是否完整', 'warning');
+            }
+            
+            aiConfig.baseURL = baseURL.replace(/\/$/, ''); // 移除末尾斜杠
+            aiConfig.apiKey = cleanApiKey;
+            aiConfig.model = document.getElementById('modelSelect').value;
+            aiConfig.maxTokens = parseInt(document.getElementById('maxTokens').value);
+            aiConfig.temperature = parseFloat(document.getElementById('temperature').value);
+
+            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
+            closeAPISettings();
+            
+            if (cleanApiKey && baseURL) {
+                showNotification('OpenWebUI配置已保存！可以开始对话了', 'success');
+                chatSession.updateChatStatus();
+            } else {
+                showNotification('配置已保存，但需要完整的服务器地址和API Key', 'warning');
+            }
+        }
+
+        function loadAPISettings() {
+            const saved = localStorage.getItem('aiConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    aiConfig = { ...aiConfig, ...config };
+
+                    document.getElementById('baseURL').value = aiConfig.baseURL;
+                    document.getElementById('apiKey').value = aiConfig.apiKey;
+                    document.getElementById('modelSelect').value = aiConfig.model;
+                    document.getElementById('maxTokens').value = aiConfig.maxTokens;
+                    document.getElementById('temperature').value = aiConfig.temperature;
+                } catch (e) {
+                    console.error('加载API设置失败:', e);
+                }
+            }
+        }
+
+        function handleAIKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendAIMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function sendQuickReply(message) {
+            const input = document.getElementById('aiInput');
+            input.value = message;
+            autoResize(input);
+            sendAIMessage();
+        }
+
+        function addAIMessage(message, sender) {
+            const chatArea = document.getElementById('aiChatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message' + (sender === 'user' ? ' user' : '');
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="message-avatar user">👤</div>
+                    <div>
+                        <div class="message-content user">${message}</div>
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="message-content ai">${formatMessage(message)}</div>
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                `;
+            }
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function addErrorMessage(errorMessage) {
+            const chatArea = document.getElementById('aiChatArea');
+            const errorDiv = MessageStatusManager.createErrorMessage(
+                errorMessage, 
+                'retryLastMessage()'
+            );
+
+            chatArea.appendChild(errorDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function retryLastMessage() {
+            const errorMessage = document.querySelector('.error-message-container');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+
+            // 获取最后一条用户消息并重试
+            const userMessages = Array.from(document.querySelectorAll('.chat-message.user'));
+            if (userMessages.length > 0) {
+                const lastUserMessage = userMessages[userMessages.length - 1];
+                const content = lastUserMessage.querySelector('.message-content').textContent;
+                sendAIMessageWithContent(content);
+            }
+        }
+
+        // ===== 页面初始化 =====
+        document.addEventListener('DOMContentLoaded', function () {
+            detectEnvironment();
+            loadAPISettings();
+            chatSession.updateChatStatus();
+
+            document.addEventListener('click', function (e) {
+                const apiSettings = document.getElementById('apiSettings');
+                const settingsBtn = document.querySelector('.settings-btn');
+                if (apiSettingsOpen && !apiSettings.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeAPISettings();
+                }
+            });
+
+            const input = document.getElementById('aiInput');
+            if (input) {
+                setTimeout(() => {
+                    input.focus();
+                    autoResize(input);
+                }, 100);
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'k') {
+                    e.preventDefault();
+                    const input = document.getElementById('aiInput');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+                
+                if (e.key === 'Escape') {
+                    if (isStreaming && currentController) {
+                        currentController.abort();
+                        showNotification('对话已取消', 'info');
+                    } else if (apiSettingsOpen) {
+                        closeAPISettings();
+                    }
+                }
+            });
+
+            console.log('优化版AI对话模块已加载 - 支持ChatID上下文管理');
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (currentController) {
+                currentController.abort();
+            }
+        });
+
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'switchMode') {
+                if (event.data.mode === 'fullscreen') {
+                    document.body.classList.add('fullscreen');
+                } else {
+                    document.body.classList.remove('fullscreen');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
