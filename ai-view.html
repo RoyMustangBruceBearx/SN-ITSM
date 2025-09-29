@@ -102,7 +102,6 @@
             text-align: center;
         }
 
-        /* 新增：消息操作按钮 */
         .message-actions {
             display: none;
             position: absolute;
@@ -139,7 +138,6 @@
             color: #374151;
         }
 
-        /* 新增：打字指示器 */
         .typing-indicator {
             display: flex;
             align-items: center;
@@ -177,7 +175,6 @@
             color: #6b7280;
         }
 
-        /* 新增：消息完成指示器 */
         .message-complete {
             color: #10b981;
             font-size: 12px;
@@ -185,7 +182,6 @@
             animation: fadeIn 0.3s ease forwards;
         }
 
-        /* 新增：错误重试 */
         .message-error {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -410,6 +406,27 @@
             color: #374151;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideInNotification 0.3s ease;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 300px;
+        }
+
+        .notification.success { background: #10b981; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .notification.warning { background: #f59e0b; color: white; }
+        .notification.info { background: #3b82f6; color: white; }
+
         /* 动画定义 */
         @keyframes messageSlide {
             from {
@@ -445,6 +462,16 @@
             to { opacity: 1; }
         }
 
+        @keyframes slideInNotification {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutNotification {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
         /* 响应式适配 */
         @media (max-width: 400px) {
             .ai-chat-area {
@@ -469,7 +496,7 @@
 </head>
 <body class="embedded">
     <!-- API设置按钮 -->
-    <button class="settings-btn" onclick="toggleAPISettings()" title="API设置">
+    <button class="settings-btn" onclick="app.uiManager.toggleAPISettings()" title="API设置">
         <i class="fas fa-cog"></i>
     </button>
 
@@ -494,7 +521,7 @@
         <label for="temperature">创造性 (0-1)</label>
         <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
 
-        <button onclick="saveAPISettings()">保存设置</button>
+        <button onclick="app.configManager.saveSettings()">保存设置</button>
     </div>
 
     <div class="ai-chat-module">
@@ -513,19 +540,17 @@
 
         <div class="ai-input-area">
             <div class="quick-replies" id="quickReplies">
-                <div class="quick-reply" onclick="sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
-                <div class="quick-reply" onclick="sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
-                <div class="quick-reply" onclick="sendQuickReply('如何进行数据分析？')">数据分析</div>
-                <div class="quick-reply" onclick="sendQuickReply('系统操作帮助')">系统帮助</div>
+                <div class="quick-reply" onclick="app.messageManager.sendQuickReply('生产管理系统怎么使用？')">生产管理</div>
+                <div class="quick-reply" onclick="app.messageManager.sendQuickReply('智慧养殖有哪些功能？')">智慧养殖</div>
+                <div class="quick-reply" onclick="app.messageManager.sendQuickReply('如何进行数据分析？')">数据分析</div>
+                <div class="quick-reply" onclick="app.messageManager.sendQuickReply('系统操作帮助')">系统帮助</div>
             </div>
             <div class="input-container">
                 <textarea class="ai-input"
                           id="aiInput"
                           placeholder="输入您的问题..."
-                          rows="1"
-                          onkeypress="handleAIKeyPress(event)"
-                          oninput="autoResize(this)"></textarea>
-                <button class="send-button" id="sendButton" onclick="sendAIMessage()">
+                          rows="1"></textarea>
+                <button class="send-button" id="sendButton">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -533,15 +558,601 @@
     </div>
 
     <script>
-        // ===== 增强的流式响应处理器 =====
-        class EnhancedStreamHandler {
+        // ===== 核心配置管理器 =====
+        class ConfigManager {
+            constructor() {
+                this.config = {
+                    baseURL: 'http://3.0.76.119:3000/api',
+                    apiKey: '',
+                    model: 'snDr-1.0-turbo',
+                    maxTokens: 2000,
+                    temperature: 0.7
+                };
+                this.observers = [];
+                this.loadSettings();
+            }
+
+            addObserver(observer) {
+                this.observers.push(observer);
+            }
+
+            removeObserver(observer) {
+                this.observers = this.observers.filter(obs => obs !== observer);
+            }
+
+            notifyObservers(change) {
+                this.observers.forEach(observer => {
+                    if (typeof observer.onConfigChange === 'function') {
+                        observer.onConfigChange(change);
+                    }
+                });
+            }
+
+            updateConfig(updates) {
+                const oldConfig = { ...this.config };
+                this.config = { ...this.config, ...updates };
+                
+                this.notifyObservers({
+                    type: 'config_updated',
+                    oldConfig,
+                    newConfig: this.config,
+                    changes: updates
+                });
+            }
+
+            validateApiKey(apiKey) {
+                if (!apiKey || apiKey.length < 10) {
+                    throw new Error('API Key长度过短，请检查是否完整');
+                }
+                
+                // 检查非ASCII字符
+                const cleanApiKey = apiKey.replace(/[^\x00-\x7F]/g, '');
+                if (apiKey !== cleanApiKey) {
+                    throw new Error('API Key包含无效字符，请使用纯英文字符');
+                }
+                
+                return cleanApiKey;
+            }
+
+            saveSettings() {
+                try {
+                    const apiKey = document.getElementById('apiKey').value.trim();
+                    const model = document.getElementById('modelSelect').value;
+                    const maxTokens = parseInt(document.getElementById('maxTokens').value);
+                    const temperature = parseFloat(document.getElementById('temperature').value);
+
+                    if (apiKey) {
+                        this.validateApiKey(apiKey);
+                    }
+
+                    this.updateConfig({
+                        apiKey,
+                        model,
+                        maxTokens,
+                        temperature
+                    });
+
+                    localStorage.setItem('aiConfig', JSON.stringify(this.config));
+                    
+                    app.uiManager.closeAPISettings();
+                    app.notificationManager.show(
+                        apiKey ? 'API设置已保存！可以开始对话了' : 'API设置已保存，但需要配置有效的API Key',
+                        apiKey ? 'success' : 'warning'
+                    );
+                } catch (error) {
+                    app.notificationManager.show(error.message, 'error');
+                }
+            }
+
+            loadSettings() {
+                try {
+                    const saved = localStorage.getItem('aiConfig');
+                    if (saved) {
+                        const config = JSON.parse(saved);
+                        this.config = { ...this.config, ...config };
+                        this.updateUIWithConfig();
+                    }
+                } catch (error) {
+                    console.error('加载API设置失败:', error);
+                }
+            }
+
+            updateUIWithConfig() {
+                const elements = {
+                    'apiKey': this.config.apiKey,
+                    'modelSelect': this.config.model,
+                    'maxTokens': this.config.maxTokens,
+                    'temperature': this.config.temperature
+                };
+
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.value = value;
+                    }
+                });
+            }
+
+            getConfig() {
+                return { ...this.config };
+            }
+        }
+
+        // ===== API客户端管理器 =====
+        class APIClient {
+            constructor(configManager) {
+                this.configManager = configManager;
+                this.currentController = null;
+                this.retryCount = 0;
+                this.maxRetries = 3;
+                this.baseDelay = 1000; // 基础延迟1秒
+            }
+
+            async sendMessage(messages, onChunk, onComplete, onError) {
+                const config = this.configManager.getConfig();
+                
+                if (!config.apiKey) {
+                    throw new Error('请先配置API Key');
+                }
+
+                this.currentController = new AbortController();
+                this.retryCount = 0;
+
+                try {
+                    await this._sendWithRetry(messages, onChunk, onComplete, onError);
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        onError(error);
+                    }
+                }
+            }
+
+            async _sendWithRetry(messages, onChunk, onComplete, onError) {
+                const config = this.configManager.getConfig();
+                
+                try {
+                    const response = await this._makeRequest(messages, config);
+                    await this._handleStreamResponse(response, onChunk, onComplete);
+                } catch (error) {
+                    if (this.shouldRetry(error) && this.retryCount < this.maxRetries) {
+                        this.retryCount++;
+                        const delay = this.baseDelay * Math.pow(2, this.retryCount - 1); // 指数退避
+                        
+                        app.notificationManager.show(
+                            `请求失败，${delay / 1000}秒后重试 (${this.retryCount}/${this.maxRetries})`,
+                            'warning'
+                        );
+                        
+                        await this._delay(delay);
+                        return this._sendWithRetry(messages, onChunk, onComplete, onError);
+                    }
+                    throw error;
+                }
+            }
+
+            async _makeRequest(messages, config) {
+                const requestHeaders = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                };
+
+                const requestBody = {
+                    model: '-',
+                    messages,
+                    max_tokens: config.maxTokens,
+                    temperature: config.temperature,
+                    stream: true
+                };
+
+                const response = await fetch(`${config.baseURL}/chat/completions`, {
+                    method: 'POST',
+                    headers: requestHeaders,
+                    body: JSON.stringify(requestBody),
+                    signal: this.currentController.signal
+                });
+
+                if (!response.ok) {
+                    throw this._createErrorFromResponse(response);
+                }
+
+                return response;
+            }
+
+            async _handleStreamResponse(response, onChunk, onComplete) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6).trim();
+                            if (data === '[DONE]') {
+                                onComplete(fullResponse);
+                                return;
+                            }
+
+                            if (data) {
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    const content = parsed.choices?.[0]?.delta?.content;
+
+                                    if (content) {
+                                        fullResponse += content;
+                                        onChunk(content);
+                                    }
+                                } catch (parseError) {
+                                    console.warn('解析SSE数据失败:', parseError);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                onComplete(fullResponse);
+            }
+
+            _createErrorFromResponse(response) {
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                
+                switch (response.status) {
+                    case 401:
+                        errorMessage = '认证失败，请检查API Key是否正确';
+                        break;
+                    case 403:
+                        errorMessage = '访问被拒绝，API Key可能没有权限';
+                        break;
+                    case 404:
+                        errorMessage = '服务器端点不存在，请检查服务器地址';
+                        break;
+                    case 429:
+                        errorMessage = '请求过于频繁，请稍后再试';
+                        break;
+                    case 500:
+                        errorMessage = '服务器内部错误，请稍后重试';
+                        break;
+                }
+
+                return new Error(errorMessage);
+            }
+
+            shouldRetry(error) {
+                if (error.name === 'AbortError') return false;
+                
+                const retryableErrors = [500, 502, 503, 504, 429];
+                const statusMatch = error.message.match(/HTTP (\d+):/);
+                
+                if (statusMatch) {
+                    const status = parseInt(statusMatch[1]);
+                    return retryableErrors.includes(status);
+                }
+                
+                return error.message.includes('网络') || 
+               error.message.includes('timeout') ||
+               error.message.includes('Failed to fetch');
+            }
+
+            _delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            abort() {
+                if (this.currentController) {
+                    this.currentController.abort();
+                    this.currentController = null;
+                }
+            }
+        }
+
+        // ===== 消息管理器 =====
+        class MessageManager {
+            constructor(apiClient) {
+                this.apiClient = apiClient;
+                this.messages = [];
+                this.maxHistory = 10;
+                this.contextWindow = 4000;
+                this.messageTemplates = this._initializeTemplates();
+                this.observers = [];
+            }
+
+            addObserver(observer) {
+                this.observers.push(observer);
+            }
+
+            notifyObservers(event) {
+                this.observers.forEach(observer => {
+                    if (typeof observer.onMessageEvent === 'function') {
+                        observer.onMessageEvent(event);
+                    }
+                });
+            }
+
+            addMessage(role, content) {
+                const message = {
+                    id: this._generateId(),
+                    role,
+                    content,
+                    timestamp: new Date(),
+                    tokens: this._estimateTokens(content)
+                };
+
+                this.messages.push(message);
+                this._trimContext();
+                
+                this.notifyObservers({
+                    type: 'message_added',
+                    message
+                });
+
+                return message;
+            }
+
+            async sendMessage(content) {
+                if (!content.trim() || app.isStreaming) return;
+
+                const userMessage = this.addMessage('user', content);
+                app.uiManager.addMessageToUI(userMessage);
+                
+                app.isStreaming = true;
+                app.uiManager.setStreamingState(true);
+
+                const typingIndicator = app.uiManager.showTypingIndicator();
+
+                try {
+                    const contextMessages = this._getContextForAPI();
+                    let fullResponse = '';
+
+                    await this.apiClient.sendMessage(
+                        contextMessages,
+                        (chunk) => {
+                            if (!app.currentStreamHandler) {
+                                app.uiManager.hideTypingIndicator();
+                                const messageElement = app.uiManager.createStreamingMessage();
+                                app.currentStreamHandler = new StreamHandler(messageElement);
+                            }
+                            app.currentStreamHandler.addChunk(chunk);
+                        },
+                        (response) => {
+                            fullResponse = response;
+                            const aiMessage = this.addMessage('assistant', response);
+                            
+                            if (app.currentStreamHandler) {
+                                app.currentStreamHandler.finishTyping();
+                                app.currentStreamHandler = null;
+                            }
+                        },
+                        (error) => {
+                            app.uiManager.hideTypingIndicator();
+                            app.uiManager.showErrorMessage(error.message, () => {
+                                this.retryLastMessage();
+                            });
+                        }
+                    );
+
+                } catch (error) {
+                    app.uiManager.hideTypingIndicator();
+                    app.uiManager.showErrorMessage(error.message, () => {
+                        this.retryLastMessage();
+                    });
+                } finally {
+                    app.isStreaming = false;
+                    app.uiManager.setStreamingState(false);
+                }
+            }
+
+            sendQuickReply(message) {
+                app.uiManager.setInputValue(message);
+                this.sendMessage(message);
+            }
+
+            retryLastMessage() {
+                const errorMessages = document.querySelectorAll('.error-message-container');
+                errorMessages.forEach(msg => msg.remove());
+
+                const lastUserMessage = this.messages[this.messages.length - 1];
+                if (lastUserMessage && lastUserMessage.role === 'user') {
+                    this.messages.pop();
+                    this.sendMessage(lastUserMessage.content);
+                }
+            }
+
+            copyMessage(messageId) {
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"] .message-content`);
+                if (messageElement) {
+                    const text = messageElement.textContent || messageElement.innerText;
+                    navigator.clipboard.writeText(text).then(() => {
+                        app.notificationManager.show('消息已复制到剪贴板', 'success');
+                    }).catch(() => {
+                        app.notificationManager.show('复制失败', 'error');
+                    });
+                }
+            }
+
+            regenerateMessage(messageId) {
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    // 移除后续的AI消息
+                    let current = messageElement.nextElementSibling;
+                    while (current) {
+                        const next = current.nextElementSibling;
+                        if (current.classList.contains('chat-message') && 
+                            !current.classList.contains('user')) {
+                            current.remove();
+                        }
+                        current = next;
+                    }
+                    
+                    messageElement.remove();
+                    
+                    // 从消息历史中移除对应的消息
+                    if (this.messages.length > 0) {
+                        this.messages = this.messages.slice(0, -1);
+                    }
+                    
+                    const lastUserMessage = this.messages[this.messages.length - 1];
+                    if (lastUserMessage && lastUserMessage.role === 'user') {
+                        this.sendMessage(lastUserMessage.content);
+                    }
+                }
+            }
+
+            likeMessage(messageId) {
+                const likeBtn = document.querySelector(`[data-message-id="${messageId}"] .action-btn[onclick*="likeMessage"]`);
+                if (likeBtn) {
+                    likeBtn.style.color = '#10b981';
+                    likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i>';
+                    app.notificationManager.show('感谢您的反馈！', 'success');
+                    this._recordMessageFeedback(messageId, 'like');
+                }
+            }
+
+            searchMessages(query) {
+                const results = [];
+                for (const message of this.messages) {
+                    if (message.content.toLowerCase().includes(query.toLowerCase())) {
+                        results.push(message);
+                    }
+                }
+                return results.sort((a, b) => b.timestamp - a.timestamp);
+            }
+
+            exportMessages(format = 'json') {
+                const data = {
+                    messages: this.messages,
+                    exportTime: new Date().toISOString(),
+                    totalMessages: this.messages.length
+                };
+
+                let content, filename, mimeType;
+
+                switch (format) {
+                    case 'json':
+                        content = JSON.stringify(data, null, 2);
+                        filename = `chat_export_${new Date().toISOString().split('T')[0]}.json`;
+                        mimeType = 'application/json';
+                        break;
+                    case 'txt':
+                        content = this.messages.map(msg => 
+                            `[${msg.timestamp.toLocaleString()}] ${msg.role}: ${msg.content}`
+                        ).join('\n\n');
+                        filename = `chat_export_${new Date().toISOString().split('T')[0]}.txt`;
+                        mimeType = 'text/plain';
+                        break;
+                    default:
+                        throw new Error('不支持的导出格式');
+                }
+
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            clearMessages() {
+                this.messages = [];
+                const chatArea = document.getElementById('aiChatArea');
+                if (chatArea) {
+                    // 只保留欢迎消息
+                    const welcomeMessage = chatArea.querySelector('.chat-message');
+                    chatArea.innerHTML = '';
+                    if (welcomeMessage) {
+                        chatArea.appendChild(welcomeMessage);
+                    }
+                }
+                
+                this.notifyObservers({
+                    type: 'messages_cleared'
+                });
+            }
+
+            _trimContext() {
+                let totalTokens = this.messages.reduce((sum, msg) => sum + msg.tokens, 0);
+                
+                while ((totalTokens > this.contextWindow || this.messages.length > this.maxHistory * 2) 
+                       && this.messages.length > 2) {
+                    const removed = this.messages.shift();
+                    totalTokens -= removed.tokens;
+                }
+            }
+
+            _getContextForAPI() {
+                return [
+                    {
+                        role: 'system',
+                        content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+                    },
+                    ...this.messages.map(msg => ({
+                        role: msg.role,
+                        content: msg.content
+                    }))
+                ];
+            }
+
+            _estimateTokens(text) {
+                return Math.ceil(text.length / 1.5);
+            }
+
+            _generateId() {
+                return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            _initializeTemplates() {
+                return {
+                    farming: [
+                        '如何查看生产报表？',
+                        '生产计划怎么制定？',
+                        '如何记录生产数据？',
+                        '异常情况如何处理？'
+                    ],
+                    breeding: [
+                        '如何监控动物健康？',
+                        '环境参数设置指南',
+                        '饲料配比建议',
+                        '疫苗接种提醒'
+                    ],
+                    data: [
+                        '如何导出数据？',
+                        '报表生成步骤',
+                        '数据异常处理',
+                        '统计图表说明'
+                    ]
+                };
+            }
+
+            _recordMessageFeedback(messageId, type) {
+                const feedback = {
+                    messageId,
+                    type,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                };
+                
+                const existingFeedback = JSON.parse(localStorage.getItem('messageFeedback') || '[]');
+                existingFeedback.push(feedback);
+                localStorage.setItem('messageFeedback', JSON.stringify(existingFeedback));
+            }
+        }
+
+        // ===== 流式处理器 =====
+        class StreamHandler {
             constructor(messageElement) {
                 this.messageElement = messageElement;
                 this.displayedText = '';
                 this.pendingText = '';
                 this.isTyping = false;
                 this.typeSpeed = 20;
-                this.messageId = this.generateId();
+                this.messageId = this._generateId();
             }
             
             addChunk(chunk) {
@@ -553,13 +1164,12 @@
             
             startTypingEffect() {
                 this.isTyping = true;
-                this.typeNextChar();
+                this._typeNextChar();
             }
             
-            typeNextChar() {
+            _typeNextChar() {
                 if (this.pendingText.length === 0) {
                     this.isTyping = false;
-                    this.onTypingComplete();
                     return;
                 }
                 
@@ -568,43 +1178,43 @@
                 this.pendingText = this.pendingText.slice(charsToAdd);
                 
                 this.displayedText += chars;
-                this.messageElement.innerHTML = formatMessage(this.displayedText);
+                this.messageElement.innerHTML = app.uiManager.formatMessage(this.displayedText);
                 
-                this.scrollToBottom();
+                app.uiManager.scrollToBottom();
                 
-                setTimeout(() => this.typeNextChar(), this.typeSpeed);
+                setTimeout(() => this._typeNextChar(), this.typeSpeed);
             }
             
             finishTyping() {
                 if (this.pendingText.length > 0) {
                     this.displayedText += this.pendingText;
                     this.pendingText = '';
-                    this.messageElement.innerHTML = formatMessage(this.displayedText);
-                    this.scrollToBottom();
+                    this.messageElement.innerHTML = app.uiManager.formatMessage(this.displayedText);
+                    app.uiManager.scrollToBottom();
                 }
                 this.isTyping = false;
-                this.onTypingComplete();
+                this._onTypingComplete();
             }
             
-            onTypingComplete() {
-                this.addMessageActions();
-                this.addCompletionIndicator();
-                this.updateQuickReplies();
+            _onTypingComplete() {
+                this._addMessageActions();
+                this._addCompletionIndicator();
+                this._updateQuickReplies();
             }
             
-            addMessageActions() {
+            _addMessageActions() {
                 const messageContainer = this.messageElement.closest('.chat-message');
                 if (messageContainer && !messageContainer.querySelector('.message-actions')) {
                     const actions = document.createElement('div');
                     actions.className = 'message-actions';
                     actions.innerHTML = `
-                        <button class="action-btn" title="复制消息" onclick="copyMessage('${this.messageId}')">
+                        <button class="action-btn" title="复制消息" onclick="app.messageManager.copyMessage('${this.messageId}')">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="action-btn" title="重新生成" onclick="regenerateMessage('${this.messageId}')">
+                        <button class="action-btn" title="重新生成" onclick="app.messageManager.regenerateMessage('${this.messageId}')">
                             <i class="fas fa-redo"></i>
                         </button>
-                        <button class="action-btn" title="点赞" onclick="likeMessage('${this.messageId}')">
+                        <button class="action-btn" title="点赞" onclick="app.messageManager.likeMessage('${this.messageId}')">
                             <i class="fas fa-thumbs-up"></i>
                         </button>
                     `;
@@ -613,7 +1223,7 @@
                 }
             }
             
-            addCompletionIndicator() {
+            _addCompletionIndicator() {
                 if (!this.messageElement.querySelector('.message-complete')) {
                     const indicator = document.createElement('span');
                     indicator.className = 'message-complete';
@@ -622,75 +1232,193 @@
                 }
             }
             
-            updateQuickReplies() {
+            _updateQuickReplies() {
                 const content = this.displayedText.toLowerCase();
                 let newReplies = [];
                 
                 if (content.includes('生产') || content.includes('管理')) {
-                    newReplies = [
-                        '如何查看生产报表？',
-                        '生产计划怎么制定？',
-                        '如何记录生产数据？',
-                        '异常情况如何处理？'
-                    ];
+                    newReplies = app.messageManager.messageTemplates.farming;
                 } else if (content.includes('养殖') || content.includes('动物')) {
-                    newReplies = [
-                        '如何监控动物健康？',
-                        '环境参数设置指南',
-                        '饲料配比建议',
-                        '疫苗接种提醒'
-                    ];
+                    newReplies = app.messageManager.messageTemplates.breeding;
                 } else if (content.includes('数据') || content.includes('分析')) {
-                    newReplies = [
-                        '如何导出数据？',
-                        '报表生成步骤',
-                        '数据异常处理',
-                        '统计图表说明'
-                    ];
+                    newReplies = app.messageManager.messageTemplates.data;
                 } else {
                     return;
                 }
                 
-                this.renderQuickReplies(newReplies);
+                app.uiManager.renderQuickReplies(newReplies);
             }
             
-            renderQuickReplies(replies) {
-                const container = document.getElementById('quickReplies');
-                if (container) {
-                    container.style.opacity = '0';
-                    setTimeout(() => {
-                        container.innerHTML = '';
-                        replies.forEach((reply, index) => {
-                            const button = document.createElement('div');
-                            button.className = 'quick-reply';
-                            button.textContent = reply;
-                            button.style.animationDelay = `${index * 0.1}s`;
-                            button.onclick = () => sendQuickReply(reply);
-                            container.appendChild(button);
-                        });
-                        container.style.opacity = '1';
-                    }, 200);
-                }
-            }
-            
-            scrollToBottom() {
-                const chatArea = document.getElementById('aiChatArea');
-                if (chatArea) {
-                    chatArea.scrollTop = chatArea.scrollHeight;
-                }
-            }
-            
-            generateId() {
+            _generateId() {
                 return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
         }
 
-        // ===== 消息状态管理器 =====
-        class MessageStatusManager {
-            static createTypingIndicator() {
+        // ===== UI管理器 =====
+        class UIManager {
+            constructor() {
+                this.apiSettingsOpen = false;
+                this.elements = this._initializeElements();
+                this._bindEvents();
+            }
+
+            _initializeElements() {
+                return {
+                    chatArea: document.getElementById('aiChatArea'),
+                    input: document.getElementById('aiInput'),
+                    sendButton: document.getElementById('sendButton'),
+                    apiSettings: document.getElementById('apiSettings'),
+                    quickReplies: document.getElementById('quickReplies')
+                };
+            }
+
+            _bindEvents() {
+                // 输入框事件
+                this.elements.input.addEventListener('input', (e) => this.autoResize(e.target));
+                this.elements.input.addEventListener('keypress', (e) => this.handleKeyPress(e));
+                
+                // 发送按钮事件
+                this.elements.sendButton.addEventListener('click', () => {
+                    const message = this.elements.input.value.trim();
+                    if (message) {
+                        app.messageManager.sendMessage(message);
+                        this.clearInput();
+                    }
+                });
+
+                // 全局键盘事件
+                document.addEventListener('keydown', (e) => this.handleGlobalKeyPress(e));
+                
+                // 点击外部关闭API设置
+                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+            }
+
+            handleKeyPress(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    const message = this.elements.input.value.trim();
+                    if (message) {
+                        app.messageManager.sendMessage(message);
+                        this.clearInput();
+                    }
+                } else if (event.ctrlKey && event.key === 'Enter') {
+                    event.preventDefault();
+                    const message = this.elements.input.value.trim();
+                    if (message) {
+                        app.messageManager.sendMessage(message);
+                        this.clearInput();
+                    }
+                }
+            }
+
+            handleGlobalKeyPress(event) {
+                // Ctrl+K 聚焦输入框
+                if (event.ctrlKey && event.key === 'k') {
+                    event.preventDefault();
+                    this.elements.input.focus();
+                    this.elements.input.select();
+                }
+                
+                // Ctrl+L 清空对话
+                if (event.ctrlKey && event.key === 'l') {
+                    event.preventDefault();
+                    if (confirm('确定要清空所有对话吗？')) {
+                        app.messageManager.clearMessages();
+                    }
+                }
+                
+                // Escape 键处理
+                if (event.key === 'Escape') {
+                    if (app.isStreaming && app.apiClient.currentController) {
+                        app.apiClient.abort();
+                        app.notificationManager.show('对话已取消', 'info');
+                    } else if (this.apiSettingsOpen) {
+                        this.closeAPISettings();
+                    }
+                }
+            }
+
+            handleOutsideClick(event) {
+                if (this.apiSettingsOpen && 
+                    !this.elements.apiSettings.contains(event.target) && 
+                    !event.target.closest('.settings-btn')) {
+                    this.closeAPISettings();
+                }
+            }
+
+            toggleAPISettings() {
+                this.apiSettingsOpen ? this.closeAPISettings() : this.openAPISettings();
+            }
+
+            openAPISettings() {
+                this.elements.apiSettings.classList.add('show');
+                this.apiSettingsOpen = true;
+            }
+
+            closeAPISettings() {
+                this.elements.apiSettings.classList.remove('show');
+                this.apiSettingsOpen = false;
+            }
+
+            addMessageToUI(message) {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message typing-message';
+                messageDiv.className = 'chat-message' + (message.role === 'user' ? ' user' : '');
+                messageDiv.setAttribute('data-message-id', message.id);
+
+                const timeStr = message.timestamp.toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                if (message.role === 'user') {
+                    messageDiv.innerHTML = `
+                        <div class="message-avatar user">👤</div>
+                        <div>
+                            <div class="message-content user">${message.content}</div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message-avatar ai">🐷</div>
+                        <div>
+                            <div class="message-content ai">${this.formatMessage(message.content)}</div>
+                            <div class="message-time">${timeStr}</div>
+                        </div>
+                    `;
+                }
+
+                this.elements.chatArea.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            createStreamingMessage() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message';
+
+                const timeStr = new Date().toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
                 messageDiv.innerHTML = `
+                    <div class="message-avatar ai">🐷</div>
+                    <div>
+                        <div class="message-content ai" id="streamingMessage"></div>
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                `;
+
+                this.elements.chatArea.appendChild(messageDiv);
+                this.scrollToBottom();
+
+                return document.getElementById('streamingMessage');
+            }
+
+            showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'chat-message typing-message';
+                typingDiv.innerHTML = `
                     <div class="message-avatar ai">🐷</div>
                     <div>
                         <div class="typing-indicator">
@@ -703,732 +1431,442 @@
                         </div>
                     </div>
                 `;
-                return messageDiv;
+
+                this.elements.chatArea.appendChild(typingDiv);
+                this.scrollToBottom();
+                return typingDiv;
             }
-            
-            static removeTypingIndicator() {
+
+            hideTypingIndicator() {
                 const typingMessage = document.querySelector('.typing-message');
                 if (typingMessage) {
                     typingMessage.remove();
                 }
             }
-            
-            static createErrorMessage(errorMessage, retryCallback) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message error-message-container';
-                messageDiv.innerHTML = `
+
+            showErrorMessage(errorMessage, retryCallback) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'chat-message error-message-container';
+                errorDiv.innerHTML = `
                     <div class="message-avatar ai">🐷</div>
                     <div>
                         <div class="message-error">
                             <div class="error-content">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <span>${errorMessage}</span>
-                                <button class="retry-btn" onclick="${retryCallback}">
+                                <button class="retry-btn">
                                     <i class="fas fa-redo"></i> 重试
                                 </button>
                             </div>
                         </div>
                     </div>
                 `;
-                return messageDiv;
+
+                const retryBtn = errorDiv.querySelector('.retry-btn');
+                retryBtn.addEventListener('click', retryCallback);
+
+                this.elements.chatArea.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            setStreamingState(isStreaming) {
+                this.elements.sendButton.disabled = isStreaming;
+                this.elements.sendButton.innerHTML = isStreaming ? 
+                    '<i class="fas fa-spinner fa-spin"></i>' : 
+                    '<i class="fas fa-paper-plane"></i>';
+            }
+
+            setInputValue(value) {
+                this.elements.input.value = value;
+                this.autoResize(this.elements.input);
+            }
+
+            clearInput() {
+                this.elements.input.value = '';
+                this.elements.input.style.height = 'auto';
+            }
+
+            autoResize(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            }
+
+            scrollToBottom() {
+                this.elements.chatArea.scrollTop = this.elements.chatArea.scrollHeight;
+            }
+
+            formatMessage(text) {
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">$1</code>')
+                    .replace(/```([\s\S]*?)```/g, '<pre style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px; margin: 8px 0; overflow-x: auto;"><code>$1</code></pre>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            renderQuickReplies(replies) {
+                if (!this.elements.quickReplies) return;
+
+                this.elements.quickReplies.style.opacity = '0';
+                setTimeout(() => {
+                    this.elements.quickReplies.innerHTML = '';
+                    replies.forEach((reply, index) => {
+                        const button = document.createElement('div');
+                        button.className = 'quick-reply';
+                        button.textContent = reply;
+                        button.style.animationDelay = `${index * 0.1}s`;
+                        button.onclick = () => app.messageManager.sendQuickReply(reply);
+                        this.elements.quickReplies.appendChild(button);
+                    });
+                    this.elements.quickReplies.style.opacity = '1';
+                }, 200);
             }
         }
 
-        // ===== 对话上下文管理器 =====
-        class ConversationContext {
+        // ===== 通知管理器 =====
+        class NotificationManager {
             constructor() {
-                this.messages = [];
-                this.maxHistory = 10;
-                this.contextWindow = 4000;
+                this.notifications = [];
+                this.maxNotifications = 3;
             }
-            
-            addMessage(role, content) {
-                const message = {
-                    id: this.generateId(),
-                    role,
-                    content,
-                    timestamp: new Date(),
-                    tokens: this.estimateTokens(content)
-                };
+
+            show(message, type = 'info', duration = 3000) {
+                const notification = this._createNotification(message, type);
+                document.body.appendChild(notification);
                 
-                this.messages.push(message);
-                this.trimContext();
-                return message;
+                this.notifications.push(notification);
+                this._limitNotifications();
+
+                // 显示动画
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                    notification.style.transform = 'translateX(0)';
+                }, 10);
+
+                // 自动隐藏
+                setTimeout(() => {
+                    this.hide(notification);
+                }, duration);
+
+                return notification;
             }
-            
-            trimContext() {
-                let totalTokens = this.messages.reduce((sum, msg) => sum + msg.tokens, 0);
-                
-                while ((totalTokens > this.contextWindow || this.messages.length > this.maxHistory * 2) 
-                       && this.messages.length > 2) {
-                    const removed = this.messages.shift();
-                    totalTokens -= removed.tokens;
+
+            hide(notification) {
+                if (notification && notification.parentNode) {
+                    notification.style.animation = 'slideOutNotification 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                        this._removeFromArray(notification);
+                    }, 300);
                 }
             }
-            
-            getContextForAPI() {
-                return [
-                    {
-                        role: 'system',
-                        content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
-                    },
-                    ...this.messages.map(msg => ({
-                        role: msg.role,
-                        content: msg.content
-                    }))
-                ];
-            }
-            
-            estimateTokens(text) {
-                return Math.ceil(text.length / 1.5);
-            }
-            
-            generateId() {
-                return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            }
-        }
 
-        // ===== 全局变量和初始化 =====
-        let apiSettingsOpen = false;
-        let isStreaming = false;
-        let currentController = null;
-        let currentStreamHandler = null;
-        let conversationContext = new ConversationContext();
-
-        // AI配置
-        let aiConfig = {
-            baseURL: 'http://3.0.76.119:3000/api',
-            apiKey: '',
-            model: 'snDr-1.0-turbo',
-            maxTokens: 2000,
-            temperature: 0.7
-        };
-
-        // ===== 安全的字符串编码函数 =====
-        function safeEncodeHeader(value) {
-            // 移除或替换非 ISO-8859-1 字符
-            if (typeof value !== 'string') {
-                value = String(value);
-            }
-            
-            // 只保留 ASCII 字符 (0-127)
-            return value.replace(/[^\x00-\x7F]/g, '');
-        }
-
-        // ===== 增强的AI消息发送函数 =====
-        async function sendAIMessage() {
-            const input = document.getElementById('aiInput');
-            const sendButton = document.getElementById('sendButton');
-            const message = input.value.trim();
-
-            if (!message || isStreaming) return;
-
-            // 检查API配置
-            if (!aiConfig.apiKey) {
-                showNotification('请先配置API Key', 'error');
-                toggleAPISettings();
-                return;
-            }
-
-            // 验证API Key格式
-            const cleanApiKey = safeEncodeHeader(aiConfig.apiKey);
-            if (!cleanApiKey) {
-                showNotification('API Key包含无效字符，请检查配置', 'error');
-                toggleAPISettings();
-                return;
-            }
-
-            conversationContext.addMessage('user', message);
-            addAIMessage(message, 'user');
-            input.value = '';
-            input.style.height = 'auto';
-
-            isStreaming = true;
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            const typingIndicator = MessageStatusManager.createTypingIndicator();
-            document.getElementById('aiChatArea').appendChild(typingIndicator);
-            typingIndicator.scrollIntoView({ behavior: 'smooth' });
-
-            try {
-                await streamAIResponse();
-            } catch (error) {
-                console.error('AI请求失败:', error);
-                MessageStatusManager.removeTypingIndicator();
-                addErrorMessage(error.message);
-            } finally {
-                isStreaming = false;
-                sendButton.disabled = false;
-                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                MessageStatusManager.removeTypingIndicator();
-            }
-        }
-
-        // ===== 修复后的流式AI响应函数 =====
-        async function streamAIResponse() {
-            const chatArea = document.getElementById('aiChatArea');
-
-            MessageStatusManager.removeTypingIndicator();
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message';
-
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            messageDiv.innerHTML = `
-                <div class="message-avatar ai">🐷</div>
-                <div>
-                    <div class="message-content ai" id="streamingMessage"></div>
-                    <div class="message-time">${timeStr}</div>
-                </div>
-            `;
-
-            chatArea.appendChild(messageDiv);
-            chatArea.scrollTop = chatArea.scrollHeight;
-
-            const streamingMessageEl = document.getElementById('streamingMessage');
-            currentStreamHandler = new EnhancedStreamHandler(streamingMessageEl);
-
-            try {
-                currentController = new AbortController();
-
-                // 安全编码API Key，移除非ASCII字符
-                const safeApiKey = safeEncodeHeader(aiConfig.apiKey);
+            _createNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s ease';
                 
-                if (!safeApiKey) {
-                    throw new Error('API Key 包含无效字符，请使用纯英文字符的API Key');
-                }
+                const icon = this._getIcon(type);
+                notification.innerHTML = `
+                    <i class="fas ${icon}"></i>
+                    <span>${message}</span>
+                `;
 
-                // 准备请求头
-                const requestHeaders = {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                };
-
-                // 添加认证头 - 尝试多种可能的格式
-                if (safeApiKey) {
-                    // 根据API服务器的要求，可能需要不同的认证格式
-                    requestHeaders['Authorization'] = `Bearer ${safeApiKey}`;
-                    // 有些API可能需要其他格式，比如：
-                    // requestHeaders['X-API-Key'] = safeApiKey;
-                    // requestHeaders['API-Key'] = safeApiKey;
-                }
-
-                console.log('发送请求到:', `${aiConfig.baseURL}/chat/completions`);
-                console.log('使用API Key前缀:', safeApiKey.substring(0, 8) + '...');
-
-                const requestBody = {
-                    model: '-',
-                    messages: conversationContext.getContextForAPI(),
-                    max_tokens: aiConfig.maxTokens,
-                    temperature: aiConfig.temperature,
-                    stream: true
-                };
-
-                console.log('请求体:', JSON.stringify(requestBody, null, 2));
-
-                const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
-                    method: 'POST',
-                    headers: requestHeaders,
-                    body: JSON.stringify(requestBody),
-                    signal: currentController.signal
+                // 点击关闭
+                notification.addEventListener('click', () => {
+                    this.hide(notification);
                 });
 
-                console.log('响应状态:', response.status, response.statusText);
-                console.log('响应头:', Object.fromEntries(response.headers.entries()));
+                return notification;
+            }
 
-                if (!response.ok) {
-                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                    
-                    // 详细的错误处理
-                    if (response.status === 401) {
-                        errorMessage = '认证失败，请检查以下项目：\n' +
-                                     '1. API Key 是否正确\n' +
-                                     '2. API Key 是否有效且未过期\n' +
-                                     '3. API Key 格式是否正确\n' +
-                                     '4. 服务器地址是否正确';
-                    } else if (response.status === 403) {
-                        errorMessage = '访问被拒绝，API Key 可能没有权限';
-                    } else if (response.status === 404) {
-                        errorMessage = '服务器端点不存在，请检查服务器地址';
-                    } else if (response.status === 500) {
-                        errorMessage = '服务器内部错误，请稍后重试';
+            _getIcon(type) {
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-times-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+                return icons[type] || icons.info;
+            }
+
+            _limitNotifications() {
+                while (this.notifications.length > this.maxNotifications) {
+                    const oldest = this.notifications.shift();
+                    this.hide(oldest);
+                }
+            }
+
+            _removeFromArray(notification) {
+                this.notifications = this.notifications.filter(n => n !== notification);
+            }
+        }
+
+        // ===== 事件管理器 =====
+        class EventManager {
+            constructor() {
+                this.listeners = new Map();
+                this._initializeGlobalEvents();
+            }
+
+            on(event, callback) {
+                if (!this.listeners.has(event)) {
+                    this.listeners.set(event, []);
+                }
+                this.listeners.get(event).push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners.has(event)) {
+                    const callbacks = this.listeners.get(event);
+                    const index = callbacks.indexOf(callback);
+                    if (index > -1) {
+                        callbacks.splice(index, 1);
                     }
-                    
-                    try {
-                        const errorData = await response.text();
-                        console.log('错误响应内容:', errorData);
-                        
-                        // 尝试解析JSON错误信息
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners.has(event)) {
+                    this.listeners.get(event).forEach(callback => {
                         try {
-                            const errorJson = JSON.parse(errorData);
-                            if (errorJson.error?.message) {
-                                errorMessage += '\n\n服务器消息: ' + errorJson.error.message;
-                            }
-                        } catch (jsonError) {
-                            // 如果不是JSON，显示原始文本
-                            if (errorData.trim()) {
-                                errorMessage += '\n\n服务器响应: ' + errorData.substring(0, 200);
-                            }
+                            callback(data);
+                        } catch (error) {
+                            console.error(`事件监听器执行错误 [${event}]:`, error);
                         }
-                    } catch (textError) {
-                        console.warn('无法读取错误响应:', textError);
-                    }
-                    
-                    throw new Error(errorMessage);
+                    });
                 }
-
-                // 检查响应是否为流式响应
-                const contentType = response.headers.get('content-type');
-                console.log('响应内容类型:', contentType);
-
-                if (!contentType || !contentType.includes('text/plain') && !contentType.includes('application/json')) {
-                    console.warn('意外的响应类型:', contentType);
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let fullResponse = '';
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value);
-                    console.log('收到数据块:', chunk.substring(0, 100) + '...');
-                    
-                    const lines = chunk.split('\n');
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6).trim();
-                            if (data === '[DONE]') {
-                                console.log('流式响应结束');
-                                break;
-                            }
-
-                            if (data) {
-                                try {
-                                    const parsed = JSON.parse(data);
-                                    const content = parsed.choices?.[0]?.delta?.content;
-
-                                    if (content) {
-                                        fullResponse += content;
-                                        currentStreamHandler.addChunk(content);
-                                    }
-                                } catch (parseError) {
-                                    console.warn('解析SSE数据失败:', parseError, '数据:', data);
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (!fullResponse) {
-                    throw new Error('未收到有效响应内容，请检查API配置');
-                }
-
-                currentStreamHandler.finishTyping();
-                conversationContext.addMessage('assistant', fullResponse);
-                streamingMessageEl.removeAttribute('id');
-
-            } catch (error) {
-                console.error('请求详细错误:', error);
-                
-                if (error.name === 'AbortError') {
-                    streamingMessageEl.innerHTML = '<em style="color: #6b7280;">对话已取消</em>';
-                } else {
-                    if (messageDiv.parentNode) {
-                        messageDiv.parentNode.removeChild(messageDiv);
-                    }
-                    throw error;
-                }
-            } finally {
-                currentController = null;
-                currentStreamHandler = null;
             }
-        }
 
-        // ===== 消息操作函数 =====
-        function copyMessage(messageId) {
-            const messageElement = document.querySelector(`[data-message-id="${messageId}"] .message-content`);
-            if (messageElement) {
-                const text = messageElement.textContent || messageElement.innerText;
-                navigator.clipboard.writeText(text).then(() => {
-                    showNotification('消息已复制到剪贴板', 'success');
-                }).catch(() => {
-                    showNotification('复制失败', 'error');
+            _initializeGlobalEvents() {
+                // 页面卸载时清理资源
+                window.addEventListener('beforeunload', () => {
+                    this.emit('app:beforeUnload');
+                });
+
+                // 窗口大小改变
+                window.addEventListener('resize', this._debounce(() => {
+                    this.emit('app:resize', {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    });
+                }, 250));
+
+                // 在线/离线状态
+                window.addEventListener('online', () => {
+                    this.emit('app:online');
+                });
+
+                window.addEventListener('offline', () => {
+                    this.emit('app:offline');
+                });
+
+                // 窗口消息（用于iframe通信）
+                window.addEventListener('message', (event) => {
+                    this.emit('app:message', event.data);
                 });
             }
+
+            _debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
         }
 
-        function regenerateMessage(messageId) {
-            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-            if (messageElement) {
-                let current = messageElement.nextElementSibling;
-                while (current) {
-                    const next = current.nextElementSibling;
-                    if (current.classList.contains('chat-message') && 
-                        !current.classList.contains('user')) {
-                        current.remove();
-                    }
-                    current = next;
-                }
+        // ===== 主应用类 =====
+        class AIChat {
+            constructor() {
+                this.isStreaming = false;
+                this.currentStreamHandler = null;
                 
-                messageElement.remove();
-                
-                if (conversationContext.messages.length > 0) {
-                    conversationContext.messages = conversationContext.messages.slice(0, -1);
-                }
-                
-                const lastUserMessage = conversationContext.messages[conversationContext.messages.length - 1];
-                if (lastUserMessage && lastUserMessage.role === 'user') {
-                    sendAIMessageWithContent(lastUserMessage.content);
-                }
+                // 初始化管理器
+                this.configManager = new ConfigManager();
+                this.apiClient = new APIClient(this.configManager);
+                this.messageManager = new MessageManager(this.apiClient);
+                this.uiManager = new UIManager();
+                this.notificationManager = new NotificationManager();
+                this.eventManager = new EventManager();
+
+                this._bindManagerEvents();
+                this._initialize();
             }
-        }
 
-        function likeMessage(messageId) {
-            const likeBtn = document.querySelector(`[data-message-id="${messageId}"] .action-btn[onclick*="likeMessage"]`);
-            if (likeBtn) {
-                likeBtn.style.color = '#10b981';
-                likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i>';
-                showNotification('感谢您的反馈！', 'success');
-                recordMessageFeedback(messageId, 'like');
-            }
-        }
+            _bindManagerEvents() {
+                // 配置变更事件
+                this.configManager.addObserver(this);
 
-        function recordMessageFeedback(messageId, type) {
-            const feedback = {
-                messageId,
-                type,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            };
-            
-            const existingFeedback = JSON.parse(localStorage.getItem('messageFeedback') || '[]');
-            existingFeedback.push(feedback);
-            localStorage.setItem('messageFeedback', JSON.stringify(existingFeedback));
-            
-            console.log('用户反馈已记录:', feedback);
-        }
+                // 消息事件
+                this.messageManager.addObserver(this);
 
-        async function sendAIMessageWithContent(content) {
-            conversationContext.addMessage('user', content);
-            addAIMessage(content, 'user');
-
-            isStreaming = true;
-            const sendButton = document.getElementById('sendButton');
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            const typingIndicator = MessageStatusManager.createTypingIndicator();
-            document.getElementById('aiChatArea').appendChild(typingIndicator);
-            typingIndicator.scrollIntoView({ behavior: 'smooth' });
-
-            try {
-                await streamAIResponse();
-            } catch (error) {
-                console.error('AI请求失败:', error);
-                MessageStatusManager.removeTypingIndicator();
-                addErrorMessage(error.message);
-            } finally {
-                isStreaming = false;
-                sendButton.disabled = false;
-                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-                MessageStatusManager.removeTypingIndicator();
-            }
-        }
-
-        function formatMessage(text) {
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px;">$1</code>')
-                .replace(/```([\s\S]*?)```/g, '<pre style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 6px; margin: 8px 0; overflow-x: auto;"><code>$1</code></pre>')
-                .replace(/\n/g, '<br>');
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-                color: white;
-                border-radius: 8px;
-                z-index: 10000;
-                animation: slideInNotification 0.3s ease;
-                font-size: 14px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                max-width: 300px;
-            `;
-            
-            const icon = type === 'success' ? 'fa-check-circle' : 
-                        type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
-            
-            notification.innerHTML = `
-                <i class="fas ${icon}"></i>
-                <span>${message}</span>
-            `;
-
-            if (!document.getElementById('notification-style')) {
-                const style = document.createElement('style');
-                style.id = 'notification-style';
-                style.textContent = `
-                    @keyframes slideInNotification {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
+                // 应用级事件
+                this.eventManager.on('app:beforeUnload', () => {
+                    if (this.apiClient.currentController) {
+                        this.apiClient.abort();
                     }
-                    @keyframes slideOutNotification {
-                        from { transform: translateX(0); opacity: 1; }
-                        to { transform: translateX(100%); opacity: 0; }
+                });
+
+                this.eventManager.on('app:online', () => {
+                    this.notificationManager.show('网络连接已恢复', 'success');
+                });
+
+                this.eventManager.on('app:offline', () => {
+                    this.notificationManager.show('网络连接已断开', 'warning');
+                });
+
+                this.eventManager.on('app:message', (data) => {
+                    if (data.type === 'switchMode') {
+                        this._handleModeSwitch(data.mode);
                     }
-                `;
-                document.head.appendChild(style);
+                });
             }
 
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.animation = 'slideOutNotification 0.3s ease';
+            _initialize() {
+                this._detectEnvironment();
+                
+                // 延迟聚焦输入框
                 setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-
-        function detectEnvironment() {
-            try {
-                if (window.self !== window.top) {
-                    document.body.classList.add('embedded');
-                    console.log('AI模块运行在iframe中');
-                }
-                
-                if (window.parent && window.parent !== window) {
-                    const parentDoc = window.parent.document;
-                    if (parentDoc.querySelector('.ai-sidebar.fullscreen')) {
-                        document.body.classList.add('fullscreen');
-                        console.log('AI模块运行在全屏模式');
-                    }
-                }
-            } catch (e) {
-                console.log('AI模块运行在独立窗口中');
-            }
-        }
-
-        function toggleAPISettings() {
-            const apiSettings = document.getElementById('apiSettings');
-            apiSettingsOpen = !apiSettingsOpen;
-
-            if (apiSettingsOpen) {
-                apiSettings.classList.add('show');
-            } else {
-                apiSettings.classList.remove('show');
-            }
-        }
-
-        function closeAPISettings() {
-            const apiSettings = document.getElementById('apiSettings');
-            apiSettings.classList.remove('show');
-            apiSettingsOpen = false;
-        }
-
-        function saveAPISettings() {
-            const rawApiKey = document.getElementById('apiKey').value.trim();
-            
-            // 验证API Key是否包含非ASCII字符
-            const cleanApiKey = safeEncodeHeader(rawApiKey);
-            if (rawApiKey && !cleanApiKey) {
-                showNotification('API Key包含无效字符，请使用纯英文字符', 'error');
-                return;
-            }
-            
-            // 验证API Key格式（基本验证）
-            if (cleanApiKey && cleanApiKey.length < 10) {
-                showNotification('API Key长度过短，请检查是否完整', 'warning');
-            }
-            
-            aiConfig.apiKey = cleanApiKey;
-            aiConfig.model = document.getElementById('modelSelect').value;
-            aiConfig.maxTokens = parseInt(document.getElementById('maxTokens').value);
-            aiConfig.temperature = parseFloat(document.getElementById('temperature').value);
-
-            localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
-            closeAPISettings();
-            
-            if (cleanApiKey) {
-                showNotification('API设置已保存！可以开始对话了', 'success');
-            } else {
-                showNotification('API设置已保存，但需要配置有效的API Key', 'warning');
-            }
-        }
-
-        function loadAPISettings() {
-            const saved = localStorage.getItem('aiConfig');
-            if (saved) {
-                try {
-                    const config = JSON.parse(saved);
-                    aiConfig = { ...aiConfig, ...config };
-
-                    document.getElementById('apiKey').value = aiConfig.apiKey;
-                    document.getElementById('modelSelect').value = aiConfig.model;
-                    document.getElementById('maxTokens').value = aiConfig.maxTokens;
-                    document.getElementById('temperature').value = aiConfig.temperature;
-                } catch (e) {
-                    console.error('加载API设置失败:', e);
-                }
-            }
-        }
-
-        function handleAIKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendAIMessage();
-            }
-        }
-
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-        }
-
-        function sendQuickReply(message) {
-            const input = document.getElementById('aiInput');
-            input.value = message;
-            autoResize(input);
-            sendAIMessage();
-        }
-
-        function addAIMessage(message, sender) {
-            const chatArea = document.getElementById('aiChatArea');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message' + (sender === 'user' ? ' user' : '');
-
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            if (sender === 'user') {
-                messageDiv.innerHTML = `
-                    <div class="message-avatar user">👤</div>
-                    <div>
-                        <div class="message-content user">${message}</div>
-                        <div class="message-time">${timeStr}</div>
-                    </div>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="message-avatar ai">🐷</div>
-                    <div>
-                        <div class="message-content ai">${formatMessage(message)}</div>
-                        <div class="message-time">${timeStr}</div>
-                    </div>
-                `;
-            }
-
-            chatArea.appendChild(messageDiv);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function addErrorMessage(errorMessage) {
-            const chatArea = document.getElementById('aiChatArea');
-            const errorDiv = MessageStatusManager.createErrorMessage(
-                errorMessage, 
-                'retryLastMessage()'
-            );
-
-            chatArea.appendChild(errorDiv);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
-        function retryLastMessage() {
-            const errorMessage = document.querySelector('.error-message-container');
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-
-            const lastUserMessage = conversationContext.messages[conversationContext.messages.length - 1];
-            if (lastUserMessage && lastUserMessage.role === 'user') {
-                conversationContext.messages.pop();
-                sendAIMessageWithContent(lastUserMessage.content);
-            }
-        }
-
-        // ===== 页面初始化 =====
-        document.addEventListener('DOMContentLoaded', function () {
-            detectEnvironment();
-            loadAPISettings();
-
-            document.addEventListener('click', function (e) {
-                const apiSettings = document.getElementById('apiSettings');
-                const settingsBtn = document.querySelector('.settings-btn');
-                if (apiSettingsOpen && !apiSettings.contains(e.target) && !settingsBtn.contains(e.target)) {
-                    closeAPISettings();
-                }
-            });
-
-            const input = document.getElementById('aiInput');
-            if (input) {
-                setTimeout(() => {
-                    input.focus();
-                    autoResize(input);
+                    this.uiManager.elements.input.focus();
+                    this.uiManager.autoResize(this.uiManager.elements.input);
                 }, 100);
+
+                console.log('AI对话体验优化已加载 - 模块化架构版本');
             }
 
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'k') {
-                    e.preventDefault();
-                    const input = document.getElementById('aiInput');
-                    if (input) {
-                        input.focus();
-                        input.select();
+            _detectEnvironment() {
+                try {
+                    if (window.self !== window.top) {
+                        document.body.classList.add('embedded');
+                        console.log('AI模块运行在iframe中');
                     }
-                }
-                
-                if (e.key === 'Escape') {
-                    if (isStreaming && currentController) {
-                        currentController.abort();
-                        showNotification('对话已取消', 'info');
-                    } else if (apiSettingsOpen) {
-                        closeAPISettings();
+                    
+                    if (window.parent && window.parent !== window) {
+                        const parentDoc = window.parent.document;
+                        if (parentDoc.querySelector('.ai-sidebar.fullscreen')) {
+                            document.body.classList.add('fullscreen');
+                            console.log('AI模块运行在全屏模式');
+                        }
                     }
+                } catch (e) {
+                    console.log('AI模块运行在独立窗口中');
                 }
-            });
-
-            console.log('AI对话体验优化已加载');
-        });
-
-        window.addEventListener('beforeunload', function () {
-            if (currentController) {
-                currentController.abort();
             }
-        });
 
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'switchMode') {
-                if (event.data.mode === 'fullscreen') {
+            _handleModeSwitch(mode) {
+                if (mode === 'fullscreen') {
                     document.body.classList.add('fullscreen');
                 } else {
                     document.body.classList.remove('fullscreen');
                 }
             }
+
+            // 配置管理器观察者方法
+            onConfigChange(change) {
+                console.log('配置已更新:', change);
+                this.eventManager.emit('config:changed', change);
+            }
+
+            // 消息管理器观察者方法
+            onMessageEvent(event) {
+                console.log('消息事件:', event);
+                this.eventManager.emit('message:event', event);
+            }
+
+            // 公共API方法
+            sendMessage(content) {
+                return this.messageManager.sendMessage(content);
+            }
+
+            clearChat() {
+                return this.messageManager.clearMessages();
+            }
+
+            exportChat(format = 'json') {
+                return this.messageManager.exportMessages(format);
+            }
+
+            searchMessages(query) {
+                return this.messageManager.searchMessages(query);
+            }
+
+            updateConfig(updates) {
+                return this.configManager.updateConfig(updates);
+            }
+
+            showNotification(message, type, duration) {
+                return this.notificationManager.show(message, type, duration);
+            }
+
+            // 获取应用状态
+            getState() {
+                return {
+                    isStreaming: this.isStreaming,
+                    messageCount: this.messageManager.messages.length,
+                    config: this.configManager.getConfig(),
+                    apiSettingsOpen: this.uiManager.apiSettingsOpen
+                };
+            }
+        }
+
+        // ===== 全局应用实例 =====
+        let app = null;
+
+        // ===== 页面初始化 =====
+        document.addEventListener('DOMContentLoaded', function () {
+            // 创建应用实例
+            app = new AIChat();
+            
+            // 暴露到全局作用域以便HTML中的onclick调用
+            window.app = app;
+            
+            // 添加全局快捷键提示
+            const shortcuts = [
+                'Ctrl+K: 聚焦输入框',
+                'Ctrl+L: 清空对话',
+                'Ctrl+Enter: 发送消息',
+                'ESC: 取消当前操作'
+            ];
+            
+            console.log('可用快捷键:', shortcuts.join(', '));
         });
+
+        // ===== 兼容性支持函数 =====
+        // 为了保持与原HTML onclick的兼容性，保留一些全局函数
+        function toggleAPISettings() {
+            if (app) app.uiManager.toggleAPISettings();
+        }
+
+        function sendQuickReply(message) {
+            if (app) app.messageManager.sendQuickReply(message);
+        }
+
+        function handleAIKeyPress(event) {
+            if (app) app.uiManager.handleKeyPress(event);
+        }
+
+        function autoResize(textarea) {
+            if (app) app.uiManager.autoResize(textarea);
+        }
+
+        function sendAIMessage() {
+            if (app) {
+                const message = app.uiManager.elements.input.value.trim();
+                if (message) {
+                    app.messageManager.sendMessage(message);
+                    app.uiManager.clearInput();
+                }
+            }
+        }
     </script>
 </body>
 </html>
