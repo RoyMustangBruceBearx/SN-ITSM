@@ -569,17 +569,101 @@
                     temperature: 0.7
                 };
                 this.observers = [];
-                this.loadSettings();
+                this.modelsConfig = null;
+                this.availableModels = [];
+                this.systemPrompt = '';
+                this.quickRepliesConfig = [];
+                this.uiConfig = {};
+                this.loadModelsConfig();
             }
-
+        
+            async loadModelsConfig() {
+                try {
+                    const response = await fetch('./json/aimodels.setting.json');
+                    if (!response.ok) {
+                        throw new Error('无法加载模型配置文件');
+                    }
+                    
+                    this.modelsConfig = await response.json();
+                    
+                    // 提取模型列表
+                    this.availableModels = this.modelsConfig.models || [];
+                    
+                    // 获取默认模型
+                    const defaultModel = this.availableModels.find(m => m.isDefault);
+                    if (defaultModel) {
+                        this.config.model = defaultModel.id;
+                        this.config.maxTokens = defaultModel.maxTokens;
+                        this.config.temperature = defaultModel.temperature;
+                    }
+                    
+                    // 提取系统提示词
+                    this.systemPrompt = this.modelsConfig.systemPrompt || '';
+                    
+                    // 提取快捷回复配置
+                    this.quickRepliesConfig = this.modelsConfig.quickReplies || [];
+                    
+                    // 提取UI配置
+                    this.uiConfig = this.modelsConfig.uiConfig || {};
+                    
+                    // 更新API配置
+                    if (this.modelsConfig.apiConfig) {
+                        this.config.baseURL = this.modelsConfig.apiConfig.baseURL || this.config.baseURL;
+                    }
+                    
+                    // 加载本地保存的设置
+                    this.loadSettings();
+                    
+                    // 初始化UI
+                    this.updateUIWithConfig();
+                    
+                    // 通知观察者配置已加载
+                    this.notifyObservers({
+                        type: 'config_loaded',
+                        config: this.modelsConfig
+                    });
+                    
+                    console.log('模型配置加载成功:', this.modelsConfig);
+                    
+                } catch (error) {
+                    console.error('加载模型配置失败:', error);
+                    // 使用默认配置
+                    this.loadSettings();
+                    this.updateUIWithConfig();
+                    
+                    if (app && app.notificationManager) {
+                        app.notificationManager.show(
+                            '模型配置文件加载失败，使用默认配置',
+                            'warning'
+                        );
+                    }
+                }
+            }
+        
+            getAvailableModels() {
+                return this.availableModels;
+            }
+        
+            getSystemPrompt() {
+                return this.systemPrompt;
+            }
+        
+            getQuickRepliesConfig() {
+                return this.quickRepliesConfig;
+            }
+        
+            getUIConfig() {
+                return this.uiConfig;
+            }
+        
             addObserver(observer) {
                 this.observers.push(observer);
             }
-
+        
             removeObserver(observer) {
                 this.observers = this.observers.filter(obs => obs !== observer);
             }
-
+        
             notifyObservers(change) {
                 this.observers.forEach(observer => {
                     if (typeof observer.onConfigChange === 'function') {
@@ -587,7 +671,7 @@
                     }
                 });
             }
-
+        
             updateConfig(updates) {
                 const oldConfig = { ...this.config };
                 this.config = { ...this.config, ...updates };
@@ -599,7 +683,7 @@
                     changes: updates
                 });
             }
-
+        
             validateApiKey(apiKey) {
                 if (!apiKey || apiKey.length < 10) {
                     throw new Error('API Key长度过短，请检查是否完整');
@@ -613,25 +697,25 @@
                 
                 return cleanApiKey;
             }
-
+        
             saveSettings() {
                 try {
                     const apiKey = document.getElementById('apiKey').value.trim();
                     const model = document.getElementById('modelSelect').value;
                     const maxTokens = parseInt(document.getElementById('maxTokens').value);
                     const temperature = parseFloat(document.getElementById('temperature').value);
-
+        
                     if (apiKey) {
                         this.validateApiKey(apiKey);
                     }
-
+        
                     this.updateConfig({
                         apiKey,
                         model,
                         maxTokens,
                         temperature
                     });
-
+        
                     localStorage.setItem('aiConfig', JSON.stringify(this.config));
                     
                     app.uiManager.closeAPISettings();
@@ -643,7 +727,7 @@
                     app.notificationManager.show(error.message, 'error');
                 }
             }
-
+        
             loadSettings() {
                 try {
                     const saved = localStorage.getItem('aiConfig');
@@ -656,28 +740,62 @@
                     console.error('加载API设置失败:', error);
                 }
             }
-
+        
             updateUIWithConfig() {
+                // 更新模型选择下拉框
+                this.populateModelSelect();
+                
+                // 更新其他配置字段
                 const elements = {
                     'apiKey': this.config.apiKey,
                     'modelSelect': this.config.model,
                     'maxTokens': this.config.maxTokens,
                     'temperature': this.config.temperature
                 };
-
+        
                 Object.entries(elements).forEach(([id, value]) => {
                     const element = document.getElementById(id);
                     if (element) {
                         element.value = value;
                     }
                 });
+                
+                // 更新欢迎消息
+                this.updateWelcomeMessage();
             }
-
+        
+            populateModelSelect() {
+                const modelSelect = document.getElementById('modelSelect');
+                if (!modelSelect || this.availableModels.length === 0) return;
+                
+                modelSelect.innerHTML = '';
+                
+                this.availableModels.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.id;
+                    option.textContent = `${model.name}${model.isDefault ? ' (默认)' : ''}`;
+                    option.title = model.description;
+                    modelSelect.appendChild(option);
+                });
+                
+                // 设置当前选中的模型
+                modelSelect.value = this.config.model;
+            }
+        
+            updateWelcomeMessage() {
+                if (!this.uiConfig.welcomeMessage) return;
+                
+                const welcomeContent = document.querySelector('.chat-message:first-child .message-content.ai');
+                if (welcomeContent) {
+                    welcomeContent.innerHTML = this.uiConfig.welcomeMessage;
+                }
+            }
+        
             getConfig() {
                 return { ...this.config };
             }
         }
-
+		
         // ===== API客户端管理器 =====
         class APIClient {
             constructor(configManager) {
@@ -738,7 +856,7 @@
                 };
 
                 const requestBody = {
-                    model: '-',
+                    model: '-updated',
                     messages,
                     max_tokens: config.maxTokens,
                     temperature: config.temperature,
@@ -1087,10 +1205,13 @@
             }
 
             _getContextForAPI() {
+                const systemPrompt = app.configManager.getSystemPrompt() || 
+                    '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。';
+                
                 return [
                     {
                         role: 'system',
-                        content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+                        content: systemPrompt
                     },
                     ...this.messages.map(msg => ({
                         role: msg.role,
@@ -1285,13 +1406,37 @@
                         this.clearInput();
                     }
                 });
-
+            
                 // 全局键盘事件
                 document.addEventListener('keydown', (e) => this.handleGlobalKeyPress(e));
                 
                 // 点击外部关闭API设置
                 document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                
+                // 初始化快捷回复
+                this.initializeQuickReplies();
             }
+			
+			initializeQuickReplies() {
+			    const quickRepliesConfig = app.configManager.getQuickRepliesConfig();
+			    
+			    if (quickRepliesConfig && quickRepliesConfig.length > 0) {
+			        // 使用配置文件中的第一个类别的快捷回复
+			        const firstCategory = quickRepliesConfig[0];
+			        if (firstCategory && firstCategory.replies) {
+			            this.renderQuickReplies(firstCategory.replies);
+			        }
+			    } else {
+			        // 使用默认快捷回复
+			        const defaultReplies = [
+			            '生产管理系统怎么使用？',
+			            '智慧养殖有哪些功能？',
+			            '如何进行数据分析？',
+			            '系统操作帮助'
+			        ];
+			        this.renderQuickReplies(defaultReplies);
+			    }
+			}
 
             handleKeyPress(event) {
                 if (event.key === 'Enter' && !event.shiftKey) {
