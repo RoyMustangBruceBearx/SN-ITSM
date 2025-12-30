@@ -677,6 +677,8 @@
                 this.isTyping = false;
                 this.typeSpeed = 20;
                 this.messageId = this.generateId();
+                this.recursionDepth = 0;
+                this.maxRecursionDepth = 1000; // Safety limit
             }
             
             addChunk(chunk) {
@@ -688,15 +690,27 @@
             
             startTypingEffect() {
                 this.isTyping = true;
+                this.recursionDepth = 0; // Reset recursion counter
                 this.typeNextChar();
             }
             
             typeNextChar() {
+                // Safety check to prevent infinite recursion
+                if (this.recursionDepth > this.maxRecursionDepth) {
+                    console.error('OptimizedStreamHandler: Maximum recursion depth exceeded, stopping typing effect');
+                    this.isTyping = false;
+                    this.finishTyping();
+                    return;
+                }
+                
                 if (this.pendingText.length === 0) {
                     this.isTyping = false;
+                    this.recursionDepth = 0; // Reset counter
                     this.onTypingComplete();
                     return;
                 }
+                
+                this.recursionDepth++;
                 
                 const charsToAdd = Math.min(2, this.pendingText.length);
                 const chars = this.pendingText.slice(0, charsToAdd);
@@ -707,17 +721,30 @@
                 
                 this.scrollToBottom();
                 
-                setTimeout(() => this.typeNextChar(), this.typeSpeed);
+                // Use requestAnimationFrame instead of setTimeout to prevent stack overflow
+                if (this.isTyping) {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            if (this.isTyping) {
+                                this.typeNextChar();
+                            }
+                        }, Math.max(this.typeSpeed, 16)); // Minimum 16ms (60fps)
+                    });
+                }
             }
             
             finishTyping() {
+                this.isTyping = false;
+                this.recursionDepth = 0; // Reset recursion counter
+                
                 if (this.pendingText.length > 0) {
                     this.displayedText += this.pendingText;
                     this.pendingText = '';
                     this.messageElement.innerHTML = formatMessage(this.displayedText);
                     this.scrollToBottom();
                 }
-                this.isTyping = false;
+                this.onTypingComplete();
+            }
                 this.onTypingComplete();
             }
             
