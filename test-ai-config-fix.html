@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI配置功能测试 - 神农集团数字化平台</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .test-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #1f2937;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .test-section {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .test-section h2 {
+      color: #374151;
+      font-size: 18px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .test-section h2 i {
+      color: #10b981;
+    }
+
+    .test-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .test-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .test-list li:last-child {
+      border-bottom: none;
+    }
+
+    .test-list li i {
+      color: #10b981;
+      font-size: 14px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #FF69B4, #FF1493);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 20, 147, 0.3);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .code-block {
+      background: #1f2937;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      margin-top: 15px;
+      overflow-x: auto;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+      border-color: #FF1493;
+      transform: translateY(-2px);
+    }
+
+    .feature-card h3 {
+      font-size: 14px;
+      color: #1f2937;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card p {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1><i class="fas fa-check-circle" style="color: #10b981;"></i> AI配置功能修复完成</h1>
+    <p class="subtitle">shengnong-platform-v2 项目 - 2025年1月16日</p>
+
+    <div class="test-section">
+      <h2><i class="fas fa-check-circle"></i> 修复内容</h2>
+      <ul class="test-list">
+        <li><i class="fas fa-check"></i> 在首页AI侧边栏聊天界面添加齿轮配置按钮</li>
+        <li><i class="fas fa-check"></i> 添加完整的API配置面板（API地址、模型、令牌数、温度）</li>
+        <li><i class="fas fa-check"></i> 集成ConfigService配置服务</li>
+        <li><i class="fas fa-check"></i> 集成AIService真实AI服务</li>
+        <li><i class="fas fa-check"></i> 实现配置的加载、保存和持久化</li>
+        <li><i class="fas fa-check"></i> 实现真实AI服务调用和模拟回复降级</li>
+        <li><i class="fas fa-check"></i> 添加对话上下文管理</li>
+        <li><i class="fas fa-check"></i> 完善错误处理和用户提示</li>
+        <li><i class="fas fa-check"></i> 添加配置面板的打开/关闭动画效果</li>
+        <li><i class="fas fa-check"></i> 实现点击外部自动关闭配置面板</li>
+      </ul>
+    </div>
+
+    <div class="test-section">
+      <h2><i class="fas fa-star"></i> 新增功能</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3><i class="fas fa-cog" style="color: #FF1493;"></i> 齿轮按钮</h3>
+          <p>点击打开AI配置面板</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-sliders-h" style="color: #667eea;"></i> 配置面板</h3>
+          <p>完整的API参数配置</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-robot" style="color: #10b981;"></i> 真实AI</h3>
+          <p>集成真实AI服务调用</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-comments" style="color: #f59e0b;"></i> 智能对话</h3>
+          <p>支持上下文对话</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-save" style="color: #3b82f6;"></i> 持久化</h3>
+          <p>配置自动保存到本地</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-shield-alt" style="color: #8b5cf6;"></i> 降级保护</h3>
+          <p>AI服务失败自动降级</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-bell" style="color: #ec4899;"></i> 通知提示</h3>
+          <p>保存成功/失败提示</p>
+        </div>
+        <div class="feature-card">
+          <h3><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> 错误处理</h3>
+          <p>完善的错误提示</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2><i class="fas fa-list-check"></i> 配置项说明</h2>
+      <ul class="test-list">
+        <li><i class="fas fa-server"></i> <strong>API地址：</strong>AI服务的API端点地址</li>
+        <li><i class="fas fa-brain"></i> <strong>模型选择：</strong>支持Qwen2.5、GPT-3.5、GPT-4、Llama2</li>
+        <li><i class="fas fa-hashtag"></i> <strong>最大令牌数：</strong>单次对话的最大令牌数（100-8000）</li>
+        <li><i class="fas fa-temperature-high"></i> <strong>创造性：</strong>控制AI回复的创造性（0-1）</li>
+      </ul>
+    </div>
+
+    <div class="test-section">
+      <h2><i class="fas fa-route"></i> 使用步骤</h2>
+      <div class="code-block">
+1. 点击首页右下角AI助手浮动按钮（🐷）<br>
+2. 在欢迎界面点击"开始对话"按钮<br>
+3. 在聊天界面头部找到齿轮图标<br>
+4. 点击齿轮按钮打开配置面板<br>
+5. 修改API参数<br>
+6. 点击"保存设置"按钮<br>
+7. 配置自动保存并生效
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="btn btn-primary" onclick="window.location.href='shengnong-platform-v2/index.html'">
+        <i class="fas fa-rocket"></i> 打开项目测试
+      </button>
+      <button class="btn btn-secondary" onclick="window.open('shengnong-platform-v2/AI配置功能修复说明.md')">
+        <i class="fas fa-file-alt"></i> 查看详细文档
+      </button>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05)); border-radius: 12px; text-align: center;">
+      <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">
+        <i class="fas fa-info-circle" style="color: #3b82f6;"></i> 
+        <strong>提示：</strong>配置功能已完全集成到项目中，可以直接使用
+      </p>
+      <span class="status-badge">✓ 修复完成</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统分类颜色对比测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .color-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .color-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .color-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .color-item i {
+            font-size: 1rem;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .old-colors .color-item {
+            opacity: 0.7;
+        }
+        
+        .new-colors .color-item {
+            opacity: 1;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="shengnong-it-v1/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="test-container">
+        <h1>系统分类颜色优化对比</h1>
+        
+        <div class="comparison">
+            <div class="color-section old-colors">
+                <h2>优化前 - 过亮刺眼的颜色</h2>
+                <div class="color-grid">
+                    <div class="color-item" style="background-color: #FFEAA720; color: #FFEAA7; border: 1px solid #FFEAA7;">
+                        <i class="fas fa-user-friends"></i>
+                        <span>人力资源 (过亮黄色)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #F7DC6F20; color: #F7DC6F; border: 1px solid #F7DC6F;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>质量管理 (刺眼黄色)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #F1948A20; color: #F1948A; border: 1px solid #F1948A;">
+                        <i class="fas fa-lock"></i>
+                        <span>安全管理 (过亮红色)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #FFA72620; color: #FFA726; border: 1px solid #FFA726;">
+                        <i class="fas fa-microscope"></i>
+                        <span>实验室 (刺眼橙色)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="color-section new-colors">
+                <h2>优化后 - 柔和易读的颜色</h2>
+                <div class="color-grid">
+                    <div class="color-item" style="background-color: #8B735520; color: #8B7355; border: 1px solid #8B7355;">
+                        <i class="fas fa-user-friends"></i>
+                        <span>人力资源 (柔和棕色)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #A1887F20; color: #A1887F; border: 1px solid #A1887F;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>质量管理 (温和灰棕)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #E5737320; color: #E57373; border: 1px solid #E57373;">
+                        <i class="fas fa-lock"></i>
+                        <span>安全管理 (柔和红色)</span>
+                    </div>
+                    <div class="color-item" style="background-color: #FFB74D20; color: #FFB74D; border: 1px solid #FFB74D;">
+                        <i class="fas fa-microscope"></i>
+                        <span>实验室 (温和橙色)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="color-section">
+            <h2>完整的优化后颜色方案</h2>
+            <div class="color-grid">
+                <div class="color-item" style="background-color: #FF6B6B20; color: #FF6B6B; border: 1px solid #FF6B6B;">
+                    <i class="fas fa-star"></i>
+                    <span>核心系统</span>
+                </div>
+                <div class="color-item" style="background-color: #4ECDC420; color: #4ECDC4; border: 1px solid #4ECDC4;">
+                    <i class="fas fa-briefcase"></i>
+                    <span>办公系统</span>
+                </div>
+                <div class="color-item" style="background-color: #45B7D120; color: #45B7D1; border: 1px solid #45B7D1;">
+                    <i class="fas fa-handshake"></i>
+                    <span>业务系统</span>
+                </div>
+                <div class="color-item" style="background-color: #96CEB420; color: #96CEB4; border: 1px solid #96CEB4;">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>分析系统</span>
+                </div>
+                <div class="color-item" style="background-color: #8B735520; color: #8B7355; border: 1px solid #8B7355;">
+                    <i class="fas fa-user-friends"></i>
+                    <span>人力资源</span>
+                </div>
+                <div class="color-item" style="background-color: #9575CD20; color: #9575CD; border: 1px solid #9575CD;">
+                    <i class="fas fa-coins"></i>
+                    <span>财务系统</span>
+                </div>
+                <div class="color-item" style="background-color: #4DB6AC20; color: #4DB6AC; border: 1px solid #4DB6AC;">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="color-item" style="background-color: #A1887F20; color: #A1887F; border: 1px solid #A1887F;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>质量管理</span>
+                </div>
+                <div class="color-item" style="background-color: #E5737320; color: #E57373; border: 1px solid #E57373;">
+                    <i class="fas fa-lock"></i>
+                    <span>安全管理</span>
+                </div>
+                <div class="color-item" style="background-color: #64B5F620; color: #64B5F6; border: 1px solid #64B5F6;">
+                    <i class="fas fa-mobile"></i>
+                    <span>移动应用</span>
+                </div>
+                <div class="color-item" style="background-color: #BA68C820; color: #BA68C8; border: 1px solid #BA68C8;">
+                    <i class="fas fa-cogs"></i>
+                    <span>基础设施</span>
+                </div>
+                <div class="color-item" style="background-color: #FFB74D20; color: #FFB74D; border: 1px solid #FFB74D;">
+                    <i class="fas fa-microscope"></i>
+                    <span>实验室</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="color-section">
+            <h2>颜色优化说明</h2>
+            <div style="line-height: 1.6; color: #555;">
+                <p><strong>优化原则：</strong></p>
+                <ul>
+                    <li>降低饱和度：避免过于鲜艳刺眼的颜色</li>
+                    <li>提高对比度：确保文字在白色背景上清晰可读</li>
+                    <li>色彩和谐：选择更加柔和、专业的色调</li>
+                    <li>视觉舒适：减少视觉疲劳，提升用户体验</li>
+                </ul>
+                <p><strong>主要改进：</strong></p>
+                <ul>
+                    <li>人力资源：从刺眼的亮黄色改为温和的棕色</li>
+                    <li>质量管理：从过亮的黄色改为柔和的灰棕色</li>
+                    <li>安全管理：从过亮的红色改为适中的红色</li>
+                    <li>实验室：从刺眼的橙色改为温和的橙色</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

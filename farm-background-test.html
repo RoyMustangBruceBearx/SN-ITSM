@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农场背景效果测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .unified-header {
+            margin-bottom: 25px;
+            padding: 0 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+        
+        .header-content {
+            text-align: center;
+            padding: 25px 20px 20px;
+        }
+        
+        .header-content h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .header-content h1 i {
+            color: #4A90E2;
+            margin-right: 15px;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(74, 144, 226, 0.2);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-item i {
+            color: #4A90E2;
+            font-size: 1rem;
+        }
+
+        .stat-item span {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .list-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 15px 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border-color: #4A90E2;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+        
+        .search-and-view {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            gap: 20px;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .search-box button {
+            padding: 10px 12px;
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .view-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-btn {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .view-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border-color: #4A90E2;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .system-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .system-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4A90E2, #FF69B4, #4CAF50);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 2;
+        }
+
+        .system-card:hover::before {
+            opacity: 1;
+        }
+        
+        .system-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .system-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #4A90E2;
+        }
+        
+        .system-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .system-desc {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+        
+        .system-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #27ae60;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .footer-item i {
+            color: #4A90E2;
+        }
+
+        .footer p {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        
+        .background-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        
+        .background-info h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .background-info p {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="shengnong-it-v1/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="test-container">
+        <h1>🌾 神农集团 - 绿色农场背景效果</h1>
+        
+        <div class="background-info">
+            <h2><i class="fas fa-seedling"></i> 农场背景主题</h2>
+            <p>新的背景图片展现了绿色草原上的美丽农场景色，完美契合神农集团的农业产业特色。<br>
+            这个背景不仅美观，更体现了企业的核心业务领域和绿色发展理念。</p>
+        </div>
+        
+        <div class="unified-header">
+            <div class="header-content">
+                <h1><i class="fas fa-building"></i> 神农集团信息数字化平台</h1>
+                
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <i class="fas fa-user-friends"></i>
+                        <span>在线用户: 89</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>今日访问: 1256</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-globe-americas"></i>
+                        <span>总访问量: 856789</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>系统状态: <span style="color: #228B22; font-weight: 600;">正常</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-tabs">
+                <button class="tab-btn active">
+                    <i class="fas fa-list"></i> 系统
+                </button>
+                <button class="tab-btn">
+                    <i class="fas fa-layer-group"></i> 平台
+                </button>
+            </div>
+            
+            <div class="search-and-view">
+                <div class="search-box">
+                    <input type="text" placeholder="搜索系统、功能...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="view-controls">
+                    <button class="view-btn active"><i class="fas fa-th-large"></i></button>
+                    <button class="view-btn"><i class="fas fa-list-ul"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <h3 class="system-title">农业管理系统</h3>
+                <p class="system-desc">农作物种植与管理平台</p>
+                <div class="system-category" style="background-color: #4CAF5020; color: #4CAF50;">
+                    <i class="fas fa-leaf"></i>
+                    <span>农业系统</span>
+                </div>
+                <div class="system-status">
+                    <i class="fas fa-circle"></i>
+                    <span>正常运行</span>
+                </div>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-tractor"></i>
+                </div>
+                <h3 class="system-title">设备管理系统</h3>
+                <p class="system-desc">农机设备监控与维护</p>
+                <div class="system-category" style="background-color: #FF943020; color: #FF9430;">
+                    <i class="fas fa-cogs"></i>
+                    <span>设备管理</span>
+                </div>
+                <div class="system-status">
+                    <i class="fas fa-circle"></i>
+                    <span>正常运行</span>
+                </div>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <h3 class="system-title">仓储管理系统</h3>
+                <p class="system-desc">农产品存储与物流管理</p>
+                <div class="system-category" style="background-color: #2196F320; color: #2196F3;">
+                    <i class="fas fa-boxes"></i>
+                    <span>仓储物流</span>
+                </div>
+                <div class="system-status">
+                    <i class="fas fa-circle"></i>
+                    <span>正常运行</span>
+                </div>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="system-title">产量分析系统</h3>
+                <p class="system-desc">农产品产量统计与分析</p>
+                <div class="system-category" style="background-color: #9C27B020; color: #9C27B0;">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>数据分析</span>
+                </div>
+                <div class="system-status">
+                    <i class="fas fa-circle"></i>
+                    <span>正常运行</span>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <div class="footer-item">
+                    <i class="fas fa-industry"></i>
+                    <span>卓越运营中心</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-phone-volume"></i>
+                    <span>技术支持: 400-626-8888</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>it@ynsnjt.com</span>
+                </div>
+            </div>
+            <p>&copy; <span id="currentYear"></span> 云南神农农业产业集团股份有限公司 | 版权所有 | 滇ICP备11003474号-3</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 设置当前年份
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

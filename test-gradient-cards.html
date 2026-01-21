@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑色蒙版效果测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat fixed;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .unified-header {
+            margin-bottom: 25px;
+            padding: 0 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+        
+        .header-content {
+            text-align: center;
+            padding: 25px 20px 20px;
+        }
+        
+        .header-content h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .list-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 15px 20px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border-color: #4A90E2;
+        }
+        
+        .search-and-view {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            gap: 20px;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .search-box button {
+            padding: 10px 12px;
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .view-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-btn {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .view-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BA3E8);
+            color: white;
+            border-color: #4A90E2;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .system-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .system-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .system-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #4A90E2;
+        }
+        
+        .system-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .system-desc {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .footer-item i {
+            color: #4A90E2;
+        }
+
+        .footer p {
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="shengnong-it-v1/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="test-container">
+        <h1>黑色透明蒙版效果测试</h1>
+        
+        <div class="unified-header">
+            <div class="header-content">
+                <h1><i class="fas fa-building"></i> 神农集团信息数字化平台</h1>
+            </div>
+
+            <div class="list-tabs">
+                <button class="tab-btn active">
+                    <i class="fas fa-list"></i> 系统
+                </button>
+                <button class="tab-btn">
+                    <i class="fas fa-layer-group"></i> 平台
+                </button>
+            </div>
+            
+            <div class="search-and-view">
+                <div class="search-box">
+                    <input type="text" placeholder="搜索系统、功能...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="view-controls">
+                    <button class="view-btn active"><i class="fas fa-th-large"></i></button>
+                    <button class="view-btn"><i class="fas fa-list-ul"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3 class="system-title">数据管理系统</h3>
+                <p class="system-desc">企业数据统一管理平台</p>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="system-title">人事管理系统</h3>
+                <p class="system-desc">员工信息与考勤管理</p>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="system-title">财务分析系统</h3>
+                <p class="system-desc">财务数据分析与报表</p>
+            </div>
+
+            <div class="system-card">
+                <div class="system-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3 class="system-title">系统配置</h3>
+                <p class="system-desc">系统参数与权限配置</p>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div class="footer-info">
+                <div class="footer-item">
+                    <i class="fas fa-industry"></i>
+                    <span>卓越运营中心</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-phone-volume"></i>
+                    <span>技术支持: 400-626-8888</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>it@ynsnjt.com</span>
+                </div>
+            </div>
+            <p>&copy; <span id="currentYear"></span> 云南神农农业产业集团股份有限公司 | 版权所有 | 滇ICP备11003474号-3</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 设置当前年份
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

@@ -379,8 +379,18 @@ body {
 }
 
 .pig-emoji {
-    font-size: 28px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.pig-emoji img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .ai-bubble {
@@ -520,7 +530,14 @@ body {
     }
 
     .pig-emoji {
-        font-size: 24px;
+        width: 100%;
+        height: 100%;
+    }
+
+    .pig-emoji img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
 
     .ai-sidebar {
@@ -564,12 +581,19 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  overflow: hidden;
+}
+
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .message-avatar.ai {
-  background: linear-gradient(135deg, #FF69B4, #FF1493);
+  background: transparent;
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .message-avatar.user {

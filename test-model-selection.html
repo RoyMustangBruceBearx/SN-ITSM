@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型选择功能测试</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #FF1493;
+            padding-bottom: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #FF1493;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 模型选择功能测试</h1>
+
+    <div class="test-section">
+        <h2>1. 测试获取模型列表</h2>
+        <p>测试接口：<code>GET http://47.236.87.251:3000/api/models</code></p>
+        <button onclick="testGetModels()">获取模型列表</button>
+        <div id="modelsResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 测试模型选择</h2>
+        <label>选择模型：</label>
+        <select id="modelSelect">
+            <option value="">请先获取模型列表</option>
+        </select>
+        <div id="selectedModel" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 测试聊天接口</h2>
+        <p>测试接口：<code>POST http://47.236.87.251:3000/api/chat/completions</code></p>
+        <label>输入消息：</label>
+        <input type="text" id="chatMessage" placeholder="输入测试消息" value="你好啊">
+        <button onclick="testChat()">发送消息</button>
+        <div id="chatResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 完整流程测试</h2>
+        <button onclick="testFullFlow()">运行完整测试</button>
+        <div id="fullFlowResult" class="result"></div>
+    </div>
+
+    <script>
+        let availableModels = [];
+
+        // 测试获取模型列表
+        async function testGetModels() {
+            const resultDiv = document.getElementById('modelsResult');
+            resultDiv.innerHTML = '正在获取模型列表...';
+
+            try {
+                const response = await fetch('http://47.236.87.251:3000/api/models', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('API返回数据:', data);
+
+                // 解析模型列表
+                let models = [];
+                if (data.data && Array.isArray(data.data)) {
+                    models = data.data.map(model => ({
+                        id: model.id,
+                        name: model.name || model.id
+                    }));
+                } else if (Array.isArray(data)) {
+                    models = data.map(model => ({
+                        id: model.id,
+                        name: model.name || model.id
+                    }));
+                }
+
+                availableModels = models;
+
+                // 更新下拉框
+                const modelSelect = document.getElementById('modelSelect');
+                modelSelect.innerHTML = models.map(model => 
+                    `<option value="${model.id}">${model.name}</option>`
+                ).join('');
+
+                // 显示结果
+                resultDiv.innerHTML = `<span class="success">✓ 成功获取 ${models.length} 个模型</span>\n\n` +
+                    JSON.stringify(models, null, 2);
+
+                // 监听选择变化
+                modelSelect.onchange = function() {
+                    const selectedModel = models.find(m => m.id === this.value);
+                    document.getElementById('selectedModel').innerHTML = 
+                        `<span class="success">已选择模型：</span>\n` +
+                        `ID: ${selectedModel.id}\n` +
+                        `Name: ${selectedModel.name}`;
+                };
+
+            } catch (error) {
+                console.error('获取模型列表失败:', error);
+                resultDiv.innerHTML = `<span class="error">✗ 失败：${error.message}</span>`;
+            }
+        }
+
+        // 测试聊天接口
+        async function testChat() {
+            const resultDiv = document.getElementById('chatResult');
+            const modelSelect = document.getElementById('modelSelect');
+            const messageInput = document.getElementById('chatMessage');
+
+            const modelId = modelSelect.value;
+            const message = messageInput.value.trim();
+
+            if (!modelId) {
+                resultDiv.innerHTML = '<span class="error">✗ 请先选择模型</span>';
+                return;
+            }
+
+            if (!message) {
+                resultDiv.innerHTML = '<span class="error">✗ 请输入消息</span>';
+                return;
+            }
+
+            resultDiv.innerHTML = '正在发送消息...';
+
+            try {
+                const requestData = {
+                    model: modelId,
+                    messages: [
+                        {
+                            role: "user",
+                            content: message
+                        }
+                    ]
+                };
+
+                console.log('发送请求:', requestData);
+
+                const response = await fetch('http://47.236.87.251:3000/api/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('API返回数据:', data);
+
+                const aiResponse = data.choices?.[0]?.message?.content || '无回复内容';
+
+                resultDiv.innerHTML = `<span class="success">✓ 发送成功</span>\n\n` +
+                    `使用模型: ${modelId}\n` +
+                    `用户消息: ${message}\n` +
+                    `AI回复: ${aiResponse}\n\n` +
+                    `完整响应:\n${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                console.error('聊天失败:', error);
+                resultDiv.innerHTML = `<span class="error">✗ 失败：${error.message}</span>`;
+            }
+        }
+
+        // 完整流程测试
+        async function testFullFlow() {
+            const resultDiv = document.getElementById('fullFlowResult');
+            resultDiv.innerHTML = '开始完整流程测试...\n\n';
+
+            try {
+                // 步骤1: 获取模型列表
+                resultDiv.innerHTML += '步骤1: 获取模型列表...\n';
+                await testGetModels();
+                await sleep(1000);
+
+                if (availableModels.length === 0) {
+                    throw new Error('未获取到模型列表');
+                }
+
+                resultDiv.innerHTML += `<span class="success">✓ 获取到 ${availableModels.length} 个模型</span>\n\n`;
+
+                // 步骤2: 选择第一个模型
+                const firstModel = availableModels[0];
+                document.getElementById('modelSelect').value = firstModel.id;
+                resultDiv.innerHTML += `步骤2: 选择模型 ${firstModel.name} (${firstModel.id})\n`;
+                resultDiv.innerHTML += `<span class="success">✓ 模型已选择</span>\n\n`;
+
+                await sleep(1000);
+
+                // 步骤3: 发送测试消息
+                resultDiv.innerHTML += '步骤3: 发送测试消息...\n';
+                document.getElementById('chatMessage').value = '你好，请介绍一下你自己';
+                await testChat();
+
+                resultDiv.innerHTML += '\n<span class="success">✓ 完整流程测试完成！</span>';
+
+            } catch (error) {
+                console.error('完整流程测试失败:', error);
+                resultDiv.innerHTML += `\n<span class="error">✗ 测试失败：${error.message}</span>`;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 页面加载时自动获取模型列表
+        window.onload = function() {
+            console.log('页面加载完成，准备测试模型选择功能');
+        };
+    </script>
+</body>
+</html>

@@ -18,6 +18,7 @@ export class AIAssistantPage {
     this.currentStreamHandler = null
     this.maxHistory = 10
     this.apiSettingsOpen = false
+    this.availableModels = [] // 存储可用的模型列表
   }
   
   async init() {
@@ -29,12 +30,22 @@ export class AIAssistantPage {
     
     this.aiService = new AIService(this.configService.getConfig('ai'))
     
+    // 加载模型列表
+    await this.loadModels()
+    
     // 监听配置变化
     eventBus.on('config:change', this.handleConfigChange.bind(this))
   }
   
   render(container) {
     this.container = container
+    
+    // 生成模型选项HTML
+    const modelOptionsHTML = this.availableModels.length > 0
+      ? this.availableModels.map(model => 
+          `<option value="${model.id}">${model.name}</option>`
+        ).join('')
+      : `<option value="qwen2.5:7b">加载中...</option>`
     
     container.innerHTML = `
       <div class="ai-assistant-page">
@@ -51,10 +62,7 @@ export class AIAssistantPage {
 
           <label for="modelSelect">模型选择</label>
           <select id="modelSelect">
-            <option value="qwen2.5:7b">Qwen2.5 7B</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="llama2">Llama 2</option>
+            ${modelOptionsHTML}
           </select>
 
           <label for="maxTokens">最大令牌数</label>
@@ -69,10 +77,12 @@ export class AIAssistantPage {
         <div class="ai-chat-module">
           <div class="ai-chat-area" id="aiChatArea">
             <div class="chat-message">
-              <div class="message-avatar ai">🐷</div>
+              <div class="message-avatar ai">
+                <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              </div>
               <div>
                 <div class="message-content ai">
-                  您好！我是神农晓问，您的专属智能农牧助手！🐷✨<br><br>
+                  您好！我是神农晓问，您的专属智能农牧助手！✨<br><br>
                   我可以为您提供专业的农牧业咨询服务，包括生产管理、智慧养殖、数据分析等各个方面的问题。
                 </div>
                 <div class="message-time">刚刚</div>
@@ -210,17 +220,25 @@ export class AIAssistantPage {
   async saveSettings() {
     try {
       const apiUrl = this.container?.querySelector('#apiUrl')?.value?.trim()
-      const model = this.container?.querySelector('#modelSelect')?.value
+      const model = this.container?.querySelector('#modelSelect')?.value  // 这是模型的ID
       const maxTokens = parseInt(this.container?.querySelector('#maxTokens')?.value)
       const temperature = parseFloat(this.container?.querySelector('#temperature')?.value)
+      
+      console.log('保存API设置:', { apiUrl, model, maxTokens, temperature })
       
       if (!apiUrl) {
         throw new Error('请输入API地址')
       }
       
+      if (!model) {
+        throw new Error('请选择模型')
+      }
+      
+      const oldBaseUrl = this.configService?.getConfig('ai')?.baseUrl
+      
       const aiConfig = {
         baseUrl: apiUrl,
-        model,
+        model,  // 保存的是模型ID
         maxTokens,
         temperature
       }
@@ -230,13 +248,75 @@ export class AIAssistantPage {
       // 更新AI服务配置
       if (this.aiService) {
         this.aiService.updateConfig(aiConfig)
+        console.log('AI服务配置已更新，当前模型ID:', model)
+      }
+      
+      // 如果API地址改变了，重新加载模型列表
+      if (oldBaseUrl !== apiUrl) {
+        console.log('API地址已更改，重新加载模型列表...')
+        await this.loadModels()
       }
       
       this.closeAPISettings()
       this.showNotification('API设置已保存！', 'success')
       
     } catch (error) {
+      console.error('保存API设置失败:', error)
       this.showNotification(error.message, 'error')
+    }
+  }
+  
+  /**
+   * 加载可用的模型列表
+   */
+  async loadModels() {
+    try {
+      console.log('正在加载模型列表...')
+      this.availableModels = await this.aiService.getModels()
+      console.log('模型列表加载完成:', this.availableModels)
+      
+      // 如果页面已经渲染，更新模型选择下拉框
+      if (this.container) {
+        this.updateModelSelect()
+      }
+    } catch (error) {
+      console.error('加载模型列表失败:', error)
+      // 使用默认模型列表
+      this.availableModels = [
+        { id: 'qwen2.5:7b', name: 'Qwen2.5 7B' },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+        { id: 'gpt-4', name: 'GPT-4' },
+        { id: 'llama2', name: 'Llama 2' }
+      ]
+    }
+  }
+  
+  /**
+   * 更新模型选择下拉框
+   */
+  updateModelSelect() {
+    const modelSelect = this.container?.querySelector('#modelSelect')
+    if (!modelSelect) return
+    
+    const currentValue = modelSelect.value
+    
+    // 清空现有选项
+    modelSelect.innerHTML = ''
+    
+    // 添加新选项
+    this.availableModels.forEach(model => {
+      const option = document.createElement('option')
+      option.value = model.id
+      option.textContent = model.name
+      modelSelect.appendChild(option)
+    })
+    
+    // 恢复之前选中的值（如果存在）
+    if (currentValue && this.availableModels.some(m => m.id === currentValue)) {
+      modelSelect.value = currentValue
+    } else if (this.availableModels.length > 0) {
+      // 否则选择第一个
+      modelSelect.value = this.availableModels[0].id
     }
   }
   
@@ -350,7 +430,9 @@ export class AIAssistantPage {
       `
     } else {
       messageDiv.innerHTML = `
-        <div class="message-avatar ai">🐷</div>
+        <div class="message-avatar ai">
+          <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        </div>
         <div>
           <div class="message-content ai">${this.formatMessage(message.content)}</div>
           <div class="message-time">${timeStr}</div>
@@ -372,7 +454,9 @@ export class AIAssistantPage {
     const timeStr = formatTime(new Date(), 'HH:mm')
     
     messageDiv.innerHTML = `
-      <div class="message-avatar ai">🐷</div>
+      <div class="message-avatar ai">
+        <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+      </div>
       <div>
         <div class="message-content ai" id="streamingMessage"></div>
         <div class="message-time">${timeStr}</div>
@@ -392,7 +476,9 @@ export class AIAssistantPage {
     const typingDiv = document.createElement('div')
     typingDiv.className = 'chat-message typing-message'
     typingDiv.innerHTML = `
-      <div class="message-avatar ai">🐷</div>
+      <div class="message-avatar ai">
+        <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+      </div>
       <div>
         <div class="typing-indicator">
           <div class="typing-dots">
@@ -422,7 +508,9 @@ export class AIAssistantPage {
     const errorDiv = document.createElement('div')
     errorDiv.className = 'chat-message error-message-container'
     errorDiv.innerHTML = `
-      <div class="message-avatar ai">🐷</div>
+      <div class="message-avatar ai">
+        <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+      </div>
       <div>
         <div class="message-error">
           <div class="error-content">

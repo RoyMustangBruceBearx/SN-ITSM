@@ -6,6 +6,8 @@
 import { SYSTEMS, SYSTEM_CATEGORIES } from '../utils/constants.js'
 import { eventBus } from '../utils/eventBus.js'
 import { debounce } from '../utils/helpers.js'
+import { ConfigService } from '../services/configService.js'
+import { AIService } from '../services/aiService.js'
 
 export class HomePage {
   constructor() {
@@ -126,9 +128,15 @@ export class HomePage {
     this.statsTimer = null
     this.aiSidebarOpen = false
     this.isFullscreen = false
+    this.apiSettingsOpen = false
+    this.availableModels = [] // 存储可用的模型列表
+    this.conversationHistory = [] // 存储对话历史
+    this.tempApiConfig = null // 临时存储API配置（验证成功后）
     
     this.container = null
     this.searchInput = null
+    this.configService = null
+    this.aiService = null
     
     // 防抖搜索
     this.debouncedSearch = debounce(this.filterSystems.bind(this), 300)
@@ -138,6 +146,16 @@ export class HomePage {
    * 初始化组件
    */
   async init() {
+    // 初始化配置服务
+    this.configService = new ConfigService()
+    await this.configService.loadConfig()
+    
+    // 初始化AI服务
+    this.aiService = new AIService(this.configService.getConfig('ai'))
+    
+    // 加载模型列表
+    await this.loadModels()
+    
     // 绑定事件
     this.bindEvents()
   }
@@ -232,8 +250,10 @@ export class HomePage {
       <!-- AI助手浮动按钮 -->
       <div class="ai-assistant">
         <button class="ai-button" id="aiButton">
-          <div class="pig-emoji">🐷</div>
-          <div class="ai-bubble">我是神农晓问 🐷</div>
+          <div class="pig-emoji">
+            <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+          </div>
+          <div class="ai-bubble">我是神农晓问</div>
         </button>
       </div>
 
@@ -538,9 +558,11 @@ export class HomePage {
     const headerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);">🐷</div>
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden;">
+            <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
           <div>
-            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问</h3>
             <div style="font-size: 12px; color: #10b981; margin-top: 2px;">在线中</div>
           </div>
         </div>
@@ -561,7 +583,9 @@ export class HomePage {
     // AI助手内容区域
     const contentHTML = `
       <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 40px; text-align: center; color: #6b7280;">
-        <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; border: 3px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 12px rgba(255, 20, 147, 0.3);">🐷</div>
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; overflow: hidden;">
+          <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+        </div>
         <h3 style="margin-bottom: 15px; color: #1f2937;">神农晓问</h3>
         <p style="margin-bottom: 20px; line-height: 1.5; color: #6b7280;">您好！我是神农集团的智能助手<br>很高兴为您服务！</p>
         
@@ -678,13 +702,18 @@ export class HomePage {
     const headerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 20, 147, 0.05));">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);">🐷</div>
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden;">
+            <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
           <div>
-            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问 🐷</h3>
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">神农晓问</h3>
             <div style="font-size: 12px; color: #10b981; margin-top: 2px;">正在对话中</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="settingsBtn" title="AI配置" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
+            <i class="fas fa-cog"></i>
+          </button>
           <button id="fullscreenBtn" title="全屏/退出全屏" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px;">
             <i class="fas fa-expand"></i>
           </button>
@@ -700,13 +729,70 @@ export class HomePage {
     
     // 创建聊天界面HTML
     const chatHTML = `
+      <!-- API设置面板 - 两步流程 -->
+      <div class="api-settings-panel" id="apiSettingsPanel" style="display: none; position: absolute; top: 70px; right: 15px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 20px; z-index: 1000; transform: scale(0.95); opacity: 0; transition: all 0.2s ease; max-height: 80vh; overflow-y: auto;">
+        <h4 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600; color: #1f2937;">AI 配置</h4>
+        
+        <!-- 步骤1: API连接配置 -->
+        <div id="step1Container">
+          <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #1e40af;">
+            <strong>步骤 1/2:</strong> 配置API连接
+          </div>
+          
+          <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #6b7280; font-weight: 500;">API地址 *</label>
+          <input type="text" id="apiUrlInput" placeholder="http://47.236.87.251:3000/api" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; margin-bottom: 12px; outline: none; transition: border-color 0.2s;">
+
+          <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #6b7280; font-weight: 500;">API Key *</label>
+          <input type="password" id="apiKeyInput" placeholder="输入您的API密钥" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; margin-bottom: 15px; outline: none; transition: border-color 0.2s;">
+
+          <div id="step1Message" style="display: none; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px;"></div>
+
+          <button id="validateApiBtn" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;">
+            <i class="fas fa-check-circle"></i> 验证并继续
+          </button>
+        </div>
+
+        <!-- 步骤2: 模型选择 (初始隐藏) -->
+        <div id="step2Container" style="display: none;">
+          <div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px; color: #065f46;">
+            <strong>步骤 2/2:</strong> 选择AI模型
+          </div>
+
+          <div style="background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; color: #065f46;">
+            <i class="fas fa-check-circle"></i> API连接成功！
+          </div>
+
+          <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #6b7280; font-weight: 500;">选择模型 *</label>
+          <select id="modelSelect" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; margin-bottom: 12px; outline: none; background: white; cursor: pointer;">
+            <option value="">加载中...</option>
+          </select>
+
+          <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #6b7280; font-weight: 500;">最大令牌数</label>
+          <input type="number" id="maxTokensInput" value="4000" min="100" max="8000" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; margin-bottom: 12px; outline: none;">
+
+          <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #6b7280; font-weight: 500;">创造性 (0-1)</label>
+          <input type="number" id="temperatureInput" value="0.7" min="0" max="1" step="0.1" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; margin-bottom: 15px; outline: none;">
+
+          <div style="display: flex; gap: 8px;">
+            <button id="backToStep1Btn" style="flex: 1; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;">
+              <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <button id="saveSettingsBtn" style="flex: 2; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;">
+              <i class="fas fa-save"></i> 保存配置
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="ai-chat-module" style="height: calc(100vh - 81px); display: flex; flex-direction: column;">
         <div class="ai-chat-area" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
           <div class="chat-message">
-            <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.8);">🐷</div>
+            <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden;">
+              <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+            </div>
             <div style="flex: 1; margin-left: 8px;">
               <div class="message-content ai" style="background: rgba(249, 250, 251, 0.8); color: #374151; padding: 10px 14px; border-radius: 16px; border-top-left-radius: 6px; font-size: 13px; line-height: 1.4;">
-                您好！我是神农晓问 🐷<br>
+                您好！我是神农晓问<br>
                 我可以为您提供农牧业咨询和系统操作指导。
               </div>
               <div class="message-time" style="font-size: 10px; color: #9ca3af; margin-top: 3px; text-align: center;">刚刚</div>
@@ -758,6 +844,10 @@ export class HomePage {
       this.resetToWelcomeScreen(aiSidebar)
     })
     
+    aiSidebar.querySelector('#settingsBtn')?.addEventListener('click', () => {
+      this.toggleAPISettings(aiSidebar)
+    })
+    
     aiSidebar.querySelector('#fullscreenBtn')?.addEventListener('click', () => {
       this.toggleFullscreen()
     })
@@ -768,6 +858,33 @@ export class HomePage {
     
     aiSidebar.querySelector('#closeAISidebarBtn')?.addEventListener('click', () => {
       this.closeAISidebar()
+    })
+    
+    // 步骤1: 验证API按钮
+    aiSidebar.querySelector('#validateApiBtn')?.addEventListener('click', () => {
+      this.validateAPIConnection(aiSidebar)
+    })
+    
+    // 步骤2: 返回按钮
+    aiSidebar.querySelector('#backToStep1Btn')?.addEventListener('click', () => {
+      this.backToStep1(aiSidebar)
+    })
+    
+    // 步骤2: 保存设置按钮
+    aiSidebar.querySelector('#saveSettingsBtn')?.addEventListener('click', () => {
+      this.saveAPISettings(aiSidebar)
+    })
+    
+    // 点击外部关闭设置面板
+    document.addEventListener('click', (e) => {
+      const settingsPanel = aiSidebar.querySelector('#apiSettingsPanel')
+      const settingsBtn = aiSidebar.querySelector('#settingsBtn')
+      
+      if (this.apiSettingsOpen && 
+          settingsPanel && !settingsPanel.contains(e.target) && 
+          settingsBtn && !settingsBtn.contains(e.target)) {
+        this.closeAPISettings(aiSidebar)
+      }
     })
   }
 
@@ -843,12 +960,19 @@ export class HomePage {
    * 发送消息
    * @param {HTMLElement} aiSidebar - AI侧边栏元素
    */
-  sendMessage(aiSidebar) {
+  async sendMessage(aiSidebar) {
     const input = aiSidebar.querySelector('.ai-input')
     const chatArea = aiSidebar.querySelector('.ai-chat-area')
+    const sendButton = aiSidebar.querySelector('.send-button')
     const message = input.value.trim()
     
     if (!message) return
+    
+    // 禁用发送按钮
+    if (sendButton) {
+      sendButton.disabled = true
+      sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+    }
     
     // 添加用户消息
     const userMessageHTML = `
@@ -872,7 +996,7 @@ export class HomePage {
     
     // 显示AI正在输入的提示
     setTimeout(() => {
-      this.showAIResponse(aiSidebar, message)
+      this.showAIResponse(aiSidebar, message, sendButton)
     }, 500)
   }
 
@@ -880,14 +1004,17 @@ export class HomePage {
    * 显示AI回复
    * @param {HTMLElement} aiSidebar - AI侧边栏元素
    * @param {string} userMessage - 用户消息
+   * @param {HTMLElement} sendButton - 发送按钮
    */
-  showAIResponse(aiSidebar, userMessage) {
+  async showAIResponse(aiSidebar, userMessage, sendButton) {
     const chatArea = aiSidebar.querySelector('.ai-chat-area')
     
     // 先显示输入中提示
     const typingHTML = `
       <div class="chat-message typing" style="display: flex; gap: 8px; align-items: flex-start;">
-        <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.8);">🐷</div>
+        <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden;">
+          <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+        </div>
         <div style="flex: 1; margin-left: 8px;">
           <div class="typing-indicator" style="background: rgba(249, 250, 251, 0.8); padding: 12px 16px; border-radius: 18px; border-top-left-radius: 6px; display: flex; align-items: center; gap: 8px;">
             <div class="typing-dots" style="display: flex; gap: 4px;">
@@ -917,20 +1044,34 @@ export class HomePage {
       document.head.appendChild(style)
     }
     
-    // 模拟AI回复（2秒后）
-    setTimeout(() => {
+    try {
+      // 尝试使用真实的AI服务
+      let aiResponse = ''
+      
+      if (this.aiService && this.configService) {
+        // 使用真实AI服务
+        aiResponse = await this.aiService.sendMessage(userMessage, {
+          context: this.getConversationContext(),
+          stream: false
+        })
+      } else {
+        // 降级到模拟回复
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        aiResponse = this.generateAIResponse(userMessage)
+      }
+      
       // 移除输入中提示
       const typingMessage = chatArea.querySelector('.typing')
       if (typingMessage) {
         typingMessage.remove()
       }
       
-      // 生成AI回复
-      const aiResponse = this.generateAIResponse(userMessage)
-      
+      // 显示AI回复
       const aiMessageHTML = `
         <div class="chat-message">
-          <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.8);">🐷</div>
+          <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden;">
+            <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+          </div>
           <div style="flex: 1; margin-left: 8px;">
             <div class="message-content ai" style="background: rgba(249, 250, 251, 0.8); color: #374151; padding: 10px 14px; border-radius: 16px; border-top-left-radius: 6px; font-size: 13px; line-height: 1.4;">${aiResponse}</div>
             <div class="message-time" style="font-size: 10px; color: #9ca3af; margin-top: 3px; text-align: center;">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
@@ -940,7 +1081,81 @@ export class HomePage {
       
       chatArea.insertAdjacentHTML('beforeend', aiMessageHTML)
       chatArea.scrollTop = chatArea.scrollHeight
-    }, 2000)
+      
+    } catch (error) {
+      console.error('AI回复失败:', error)
+      
+      // 移除输入中提示
+      const typingMessage = chatArea.querySelector('.typing')
+      if (typingMessage) {
+        typingMessage.remove()
+      }
+      
+      // 显示错误消息
+      const errorMessageHTML = `
+        <div class="chat-message error">
+          <div class="message-avatar ai" style="width: 32px; height: 32px; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden;">
+            <img src="./src/assets/images/Shennong_Vet_Assistant_Icon.png" alt="神农晓问" style="width: 110%; height: 110%; object-fit: cover; transform: scale(1.1);">
+          </div>
+          <div style="flex: 1; margin-left: 8px;">
+            <div class="message-content ai" style="background: rgba(254, 202, 202, 0.8); color: #991b1b; padding: 10px 14px; border-radius: 16px; border-top-left-radius: 6px; font-size: 13px; line-height: 1.4;">
+              <i class="fas fa-exclamation-triangle"></i> 抱歉，AI服务暂时不可用。<br>
+              错误信息：${error.message}<br><br>
+              请检查API配置或稍后重试。
+            </div>
+            <div class="message-time" style="font-size: 10px; color: #9ca3af; margin-top: 3px; text-align: center;">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        </div>
+      `
+      
+      chatArea.insertAdjacentHTML('beforeend', errorMessageHTML)
+      chatArea.scrollTop = chatArea.scrollHeight
+      
+    } finally {
+      // 恢复发送按钮
+      if (sendButton) {
+        sendButton.disabled = false
+        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>'
+      }
+    }
+  }
+
+  /**
+   * 获取对话上下文
+   * @returns {Array} 对话上下文数组
+   */
+  getConversationContext() {
+    // 从聊天区域获取最近的对话历史
+    const chatArea = this.container?.querySelector('.ai-chat-area')
+    if (!chatArea) return []
+    
+    const messages = []
+    const messageElements = chatArea.querySelectorAll('.chat-message:not(.typing):not(.error)')
+    
+    // 只保留最近10条消息作为上下文
+    const recentMessages = Array.from(messageElements).slice(-10)
+    
+    recentMessages.forEach(msgEl => {
+      const isUser = msgEl.classList.contains('user')
+      const contentEl = msgEl.querySelector('.message-content')
+      
+      if (contentEl) {
+        const content = contentEl.textContent.trim()
+        messages.push({
+          role: isUser ? 'user' : 'assistant',
+          content: content
+        })
+      }
+    })
+    
+    // 添加系统提示
+    return [
+      {
+        role: 'system',
+        content: '你是神农集团的智能农牧助手"神农晓问"，专门为用户提供农牧业生产、管理、技术等方面的专业咨询和系统操作指导。请用中文回答，语气要友好专业。'
+      },
+      ...messages
+    ]
   }
 
   /**
@@ -973,6 +1188,348 @@ export class HomePage {
   openAIWindow() {
     console.log('请求导航到AI助手页面')
     eventBus.emit('app:navigate', '/ai-assistant')
+  }
+  
+  /**
+   * 切换API设置面板
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  toggleAPISettings(aiSidebar) {
+    if (this.apiSettingsOpen) {
+      this.closeAPISettings(aiSidebar)
+    } else {
+      this.openAPISettings(aiSidebar)
+    }
+  }
+  
+  /**
+   * 打开API设置面板
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  openAPISettings(aiSidebar) {
+    const settingsPanel = aiSidebar.querySelector('#apiSettingsPanel')
+    if (settingsPanel) {
+      // 加载当前配置
+      this.loadAPISettings(aiSidebar)
+      
+      // 重置到步骤1
+      this.showStep1(aiSidebar)
+      
+      // 显示面板
+      settingsPanel.style.display = 'block'
+      setTimeout(() => {
+        settingsPanel.style.transform = 'scale(1)'
+        settingsPanel.style.opacity = '1'
+      }, 10)
+      
+      this.apiSettingsOpen = true
+    }
+  }
+  
+  /**
+   * 显示步骤1
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  showStep1(aiSidebar) {
+    const step1Container = aiSidebar.querySelector('#step1Container')
+    const step2Container = aiSidebar.querySelector('#step2Container')
+    const step1Message = aiSidebar.querySelector('#step1Message')
+    
+    if (step1Container) step1Container.style.display = 'block'
+    if (step2Container) step2Container.style.display = 'none'
+    if (step1Message) step1Message.style.display = 'none'
+  }
+  
+  /**
+   * 显示步骤2
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   * @param {Array} models - 模型列表
+   */
+  showStep2(aiSidebar, models) {
+    const step1Container = aiSidebar.querySelector('#step1Container')
+    const step2Container = aiSidebar.querySelector('#step2Container')
+    const modelSelect = aiSidebar.querySelector('#modelSelect')
+    
+    if (step1Container) step1Container.style.display = 'none'
+    if (step2Container) step2Container.style.display = 'block'
+    
+    // 更新模型列表
+    if (modelSelect && models && models.length > 0) {
+      modelSelect.innerHTML = models.map(model => 
+        `<option value="${model.id}">${model.name}</option>`
+      ).join('')
+      
+      // 如果有保存的模型，选中它
+      const savedModel = this.configService?.getConfig('ai')?.model
+      if (savedModel && models.some(m => m.id === savedModel)) {
+        modelSelect.value = savedModel
+      }
+    }
+  }
+  
+  /**
+   * 返回步骤1
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  backToStep1(aiSidebar) {
+    this.showStep1(aiSidebar)
+  }
+  
+  /**
+   * 验证API连接
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  async validateAPIConnection(aiSidebar) {
+    const apiUrlInput = aiSidebar.querySelector('#apiUrlInput')
+    const apiKeyInput = aiSidebar.querySelector('#apiKeyInput')
+    const validateBtn = aiSidebar.querySelector('#validateApiBtn')
+    const step1Message = aiSidebar.querySelector('#step1Message')
+    
+    const apiUrl = apiUrlInput?.value?.trim()
+    const apiKey = apiKeyInput?.value?.trim()
+    
+    // 验证输入
+    if (!apiUrl) {
+      this.showStep1Message(aiSidebar, '请输入API地址', 'error')
+      return
+    }
+    
+    if (!apiKey) {
+      this.showStep1Message(aiSidebar, '请输入API Key', 'error')
+      return
+    }
+    
+    // 显示加载状态
+    if (validateBtn) {
+      validateBtn.disabled = true
+      validateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 验证中...'
+    }
+    
+    try {
+      console.log('开始验证API连接...')
+      
+      // 调用AIService的验证方法
+      const result = await this.aiService.validateAndGetModels(apiUrl, apiKey)
+      
+      if (result.success && result.models.length > 0) {
+        // 验证成功，显示步骤2
+        console.log('API验证成功，获取到模型列表:', result.models)
+        this.showStep1Message(aiSidebar, '连接成功！正在加载模型...', 'success')
+        
+        setTimeout(() => {
+          this.showStep2(aiSidebar, result.models)
+          // 临时保存API配置
+          this.tempApiConfig = { baseUrl: apiUrl, apiKey }
+        }, 500)
+        
+      } else {
+        // 验证失败
+        console.error('API验证失败:', result.error)
+        this.showStep1Message(aiSidebar, result.error || '连接失败，请检查API地址和密钥', 'error')
+      }
+      
+    } catch (error) {
+      console.error('验证API连接失败:', error)
+      this.showStep1Message(aiSidebar, error.message || '连接失败，请检查网络和配置', 'error')
+      
+    } finally {
+      // 恢复按钮状态
+      if (validateBtn) {
+        validateBtn.disabled = false
+        validateBtn.innerHTML = '<i class="fas fa-check-circle"></i> 验证并继续'
+      }
+    }
+  }
+  
+  /**
+   * 显示步骤1的消息
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   * @param {string} message - 消息内容
+   * @param {string} type - 消息类型 (success/error)
+   */
+  showStep1Message(aiSidebar, message, type = 'info') {
+    const step1Message = aiSidebar.querySelector('#step1Message')
+    if (!step1Message) return
+    
+    step1Message.style.display = 'block'
+    step1Message.textContent = message
+    
+    if (type === 'success') {
+      step1Message.style.background = 'rgba(16, 185, 129, 0.1)'
+      step1Message.style.color = '#065f46'
+      step1Message.style.border = '1px solid rgba(16, 185, 129, 0.3)'
+    } else if (type === 'error') {
+      step1Message.style.background = 'rgba(239, 68, 68, 0.1)'
+      step1Message.style.color = '#991b1b'
+      step1Message.style.border = '1px solid rgba(239, 68, 68, 0.3)'
+    } else {
+      step1Message.style.background = 'rgba(59, 130, 246, 0.1)'
+      step1Message.style.color = '#1e40af'
+      step1Message.style.border = '1px solid rgba(59, 130, 246, 0.3)'
+    }
+  }
+  
+  /**
+   * 关闭API设置面板
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  closeAPISettings(aiSidebar) {
+    const settingsPanel = aiSidebar.querySelector('#apiSettingsPanel')
+    if (settingsPanel) {
+      settingsPanel.style.transform = 'scale(0.95)'
+      settingsPanel.style.opacity = '0'
+      setTimeout(() => {
+        settingsPanel.style.display = 'none'
+      }, 200)
+      
+      this.apiSettingsOpen = false
+    }
+  }
+  
+  /**
+   * 加载API设置
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  loadAPISettings(aiSidebar) {
+    if (!this.configService) return
+    
+    const config = this.configService.getConfig('ai')
+    if (!config) return
+    
+    const apiUrlInput = aiSidebar.querySelector('#apiUrlInput')
+    const apiKeyInput = aiSidebar.querySelector('#apiKeyInput')
+    const maxTokensInput = aiSidebar.querySelector('#maxTokensInput')
+    const temperatureInput = aiSidebar.querySelector('#temperatureInput')
+    
+    if (apiUrlInput && config.baseUrl) apiUrlInput.value = config.baseUrl
+    if (apiKeyInput && config.apiKey) apiKeyInput.value = config.apiKey
+    if (maxTokensInput && config.maxTokens) maxTokensInput.value = config.maxTokens
+    if (temperatureInput && config.temperature) temperatureInput.value = config.temperature
+  }
+  
+  /**
+   * 保存API设置
+   * @param {HTMLElement} aiSidebar - AI侧边栏元素
+   */
+  async saveAPISettings(aiSidebar) {
+    try {
+      const modelSelect = aiSidebar.querySelector('#modelSelect')
+      const maxTokensInput = aiSidebar.querySelector('#maxTokensInput')
+      const temperatureInput = aiSidebar.querySelector('#temperatureInput')
+      
+      const model = modelSelect?.value  // 这是模型的ID
+      const maxTokens = parseInt(maxTokensInput?.value)
+      const temperature = parseFloat(temperatureInput?.value)
+      
+      console.log('保存API设置:', { 
+        baseUrl: this.tempApiConfig?.baseUrl,
+        apiKey: this.tempApiConfig?.apiKey ? '***' : '',
+        model, 
+        maxTokens, 
+        temperature 
+      })
+      
+      if (!this.tempApiConfig || !this.tempApiConfig.baseUrl || !this.tempApiConfig.apiKey) {
+        throw new Error('API配置不完整，请重新验证')
+      }
+      
+      if (!model) {
+        throw new Error('请选择模型')
+      }
+      
+      const aiConfig = {
+        baseUrl: this.tempApiConfig.baseUrl,
+        apiKey: this.tempApiConfig.apiKey,
+        model,  // 保存的是模型ID
+        maxTokens,
+        temperature
+      }
+      
+      await this.configService.setConfig('ai', aiConfig)
+      
+      // 更新AI服务配置
+      if (this.aiService) {
+        this.aiService.updateConfig(aiConfig)
+        console.log('AI服务配置已更新，当前模型ID:', model)
+      }
+      
+      // 清除临时配置
+      this.tempApiConfig = null
+      
+      this.closeAPISettings(aiSidebar)
+      this.showNotification('API设置已保存！', 'success')
+      
+    } catch (error) {
+      console.error('保存API设置失败:', error)
+      this.showNotification(error.message, 'error')
+    }
+  }
+  
+  /**
+   * 显示通知
+   * @param {string} message - 消息内容
+   * @param {string} type - 消息类型
+   */
+  showNotification(message, type = 'info') {
+    eventBus.emit('notification:show', { message, type })
+  }
+  
+  /**
+   * 加载可用的模型列表
+   */
+  async loadModels() {
+    try {
+      console.log('正在加载模型列表...')
+      this.availableModels = await this.aiService.getModels()
+      console.log('模型列表加载完成:', this.availableModels)
+      
+      // 如果页面已经渲染且配置面板打开，更新模型选择下拉框
+      if (this.container && this.apiSettingsOpen) {
+        this.updateModelSelect()
+      }
+    } catch (error) {
+      console.error('加载模型列表失败:', error)
+      // 使用默认模型列表
+      this.availableModels = [
+        { id: 'qwen2.5:7b', name: 'Qwen2.5 7B' },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+        { id: 'gpt-4', name: 'GPT-4' },
+        { id: 'llama2', name: 'Llama 2' }
+      ]
+    }
+  }
+  
+  /**
+   * 更新模型选择下拉框
+   */
+  updateModelSelect() {
+    const aiSidebar = this.container.querySelector('#aiSidebar')
+    if (!aiSidebar) return
+    
+    const modelSelect = aiSidebar.querySelector('#modelSelect')
+    if (!modelSelect) return
+    
+    // 保存当前选中的值
+    const currentValue = modelSelect.value
+    
+    // 清空现有选项
+    modelSelect.innerHTML = ''
+    
+    // 添加新选项
+    this.availableModels.forEach(model => {
+      const option = document.createElement('option')
+      option.value = model.id
+      option.textContent = model.name || model.id
+      modelSelect.appendChild(option)
+    })
+    
+    // 恢复之前选中的值（如果存在）
+    if (currentValue && this.availableModels.some(m => m.id === currentValue)) {
+      modelSelect.value = currentValue
+    } else if (this.availableModels.length > 0) {
+      // 否则选择第一个
+      modelSelect.value = this.availableModels[0].id
+    }
   }
   
   /**
